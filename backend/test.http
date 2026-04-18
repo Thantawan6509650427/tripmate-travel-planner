@@ -1,0 +1,39 @@
+### Health check
+GET http://localhost:5000/health
+
+### Register
+POST http://localhost:5000/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@test.com",
+  "password": "123456",
+  "name": "Thantawan"
+}
+
+### Login
+POST http://localhost:5000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@test.com",
+  "password": "123456"
+}
+
+### Get me (ใส่ token จาก login)
+GET http://localhost:5000/api/auth/me
+Authorization: Bearer YOUR_TOKEN_HERE
+
+### Create trip
+POST http://localhost:5000/api/trips/add-trip
+Content-Type: application/json
+Authorization: Bearer YOUR_TOKEN_HERE
+
+{
+  "name": "ทริปทดสอบ",
+  "description": "สวัสดี"
+}
+
+### Get my trips
+GET http://localhost:5000/api/trips/all-my-trips
+Authorization: Bearer YOUR_TOKEN_HERE
