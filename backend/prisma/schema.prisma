@@ -1,0 +1,202 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ============================================================================
+// USER
+// ============================================================================
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  password      String
+  name          String
+  avatar        String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // relations
+  ownedTrips    Trip[]           @relation("TripOwner")
+  memberships   TripMember[]
+  availabilities Availability[]
+  budgetVotes   BudgetVote[]
+  locationVotes LocationVote[]
+  notifications Notification[]
+
+  @@map("users")
+}
+
+// ============================================================================
+// TRIP
+// ============================================================================
+
+model Trip {
+  id          String     @id @default(uuid())
+  name        String
+  description String?
+  inviteCode  String     @unique @map("invite_code")
+  status      TripStatus @default(OPEN)
+  aiSummary   String?    @map("ai_summary")
+  link        String?
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  // foreign key
+  ownerId     String     @map("owner_id")
+  owner       User       @relation("TripOwner", fields: [ownerId], references: [id])
+
+  // relations
+  members       TripMember[]
+  availabilities Availability[]
+  budgetVotes   BudgetVote[]
+  locationVotes LocationVote[]
+  selectedDates TripSelectedDate[]
+  notifications Notification[]
+
+  @@map("trips")
+}
+
+enum TripStatus {
+  OPEN         // กำลังรวบรวม availability
+  VOTING       // กำลังโหวต budget + location
+  CLOSED       // ปิดแล้ว มี summary
+}
+
+// ============================================================================
+// TRIP MEMBER
+// ============================================================================
+
+model TripMember {
+  id        String       @id @default(uuid())
+  role      MemberRole   @default(MEMBER)
+  status    MemberStatus @default(PENDING)
+  joinedAt  DateTime     @default(now()) @map("joined_at")
+
+  // foreign keys
+  tripId    String       @map("trip_id")
+  userId    String       @map("user_id")
+  trip      Trip         @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tripId, userId])
+  @@map("trip_members")
+}
+
+enum MemberRole {
+  OWNER
+  MEMBER
+}
+
+enum MemberStatus {
+  PENDING    // รอ owner อนุมัติ
+  APPROVED   // เข้าร่วมแล้ว
+  REJECTED   // ถูกปฏิเสธ
+}
+
+// ============================================================================
+// AVAILABILITY (Step 1 — Date voting)
+// ============================================================================
+
+model Availability {
+  id        String   @id @default(uuid())
+  dates     String[] // เก็บเป็น array ของ "YYYY-MM-DD"
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // foreign keys
+  tripId    String   @map("trip_id")
+  userId    String   @map("user_id")
+  trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tripId, userId])
+  @@map("availabilities")
+}
+
+// วันที่ถูก confirm หลัง owner กด start voting
+model TripSelectedDate {
+  id    String @id @default(uuid())
+  date  String // "YYYY-MM-DD"
+  score Int    @default(0) // จำนวนคนที่ว่างวันนี้
+
+  tripId String @map("trip_id")
+  trip   Trip   @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@map("trip_selected_dates")
+}
+
+// ============================================================================
+// BUDGET VOTE (Step 2)
+// ============================================================================
+
+model BudgetVote {
+  id        String   @id @default(uuid())
+  category  String   // "accommodation" | "food" | "transport" | "activity"
+  amount    Int      // บาท
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // foreign keys
+  tripId    String   @map("trip_id")
+  userId    String   @map("user_id")
+  trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tripId, userId, category])
+  @@map("budget_votes")
+}
+
+// ============================================================================
+// LOCATION VOTE (Step 3)
+// ============================================================================
+
+model LocationVote {
+  id        String   @id @default(uuid())
+  place     String   // ชื่อสถานที่
+  score     Int      @default(0) // คะแนนที่ให้
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // foreign keys
+  tripId    String   @map("trip_id")
+  userId    String   @map("user_id")
+  trip      Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tripId, userId, place])
+  @@map("location_votes")
+}
+
+// ============================================================================
+// NOTIFICATION
+// ============================================================================
+
+model Notification {
+  id        String           @id @default(uuid())
+  type      NotificationType
+  message   String
+  isRead    Boolean          @default(false) @map("is_read")
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  // foreign keys
+  userId    String           @map("user_id")
+  tripId    String?          @map("trip_id")
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trip      Trip?            @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+enum NotificationType {
+  JOIN_REQUEST    // มีคนขอเข้าร่วม
+  REQUEST_APPROVED // คำขอได้รับการอนุมัติ
+  REQUEST_REJECTED // คำขอถูกปฏิเสธ
+  VOTING_STARTED  // เริ่มโหวตแล้ว
+  TRIP_CLOSED     // ทริปปิดแล้ว มี summary
+  MEMBER_REMOVED  // ถูกเอาออกจากทริป
+}
