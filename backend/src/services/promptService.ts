@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import Anthropic from "@anthropic-ai/sdk";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -8,6 +9,10 @@ if (!process.env.OPENAI_API_KEY) {
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
+});
+
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
 // ============== TYPES ==============
@@ -433,9 +438,63 @@ function buildAccommodationPrompt(data: any, config: PromptConfig): string {
   return prompt;
 }
 
+// ============== SUMMARY FORMAT PROMPT (จาก StepSummary) ==============
+
+function buildSummaryPrompt(data: any, config: PromptConfig): string {
+  const { tripname, numdays, bestDates, avgBudget, topLocations } = data;
+
+  const topPlace = topLocations?.[0]?.place || "ยังไม่กำหนด";
+  const totalBudget = avgBudget
+    ? Object.values(avgBudget as Record<string, number>).reduce((a, b) => a + b, 0)
+    : 0;
+
+  let prompt = `# 🎯 วางแผนทริป: ${tripname}\n\n`;
+  prompt += `⚠️ **กรุณาตอบกลับทั้งหมดเป็นภาษาไทยเท่านั้น**\n\n`;
+  prompt += `## รายละเอียดทริป\n\n`;
+  prompt += `- **ชื่อทริป**: ${tripname}\n`;
+  prompt += `- **ระยะเวลา**: ${numdays} วัน\n`;
+  prompt += `- **จุดหมายอันดับ 1**: ${topPlace}\n`;
+
+  if (bestDates?.length) {
+    prompt += `- **วันที่แนะนำ**: ${bestDates[0]} ถึง ${bestDates[bestDates.length - 1]}\n`;
+  }
+
+  if (avgBudget && totalBudget > 0) {
+    prompt += `\n## งบประมาณเฉลี่ยต่อคน\n\n`;
+    prompt += `- 🏠 ที่พัก: ฿${avgBudget.accommodation?.toLocaleString() || 0}\n`;
+    prompt += `- 🚗 เดินทาง: ฿${avgBudget.transport?.toLocaleString() || 0}\n`;
+    prompt += `- 🍜 อาหาร: ฿${avgBudget.food?.toLocaleString() || 0}\n`;
+    prompt += `- 🎒 สำรอง: ฿${avgBudget.other?.toLocaleString() || 0}\n`;
+    prompt += `- **รวม**: ฿${totalBudget.toLocaleString()}\n`;
+  }
+
+  if (topLocations?.length) {
+    prompt += `\n## จังหวัดที่ได้คะแนนสูงสุด\n\n`;
+    topLocations.forEach((loc: any, idx: number) => {
+      prompt += `${idx + 1}. ${loc.place} (${loc.total_score} คะแนน)\n`;
+    });
+  }
+
+  prompt += `\n## สิ่งที่ต้องการ\n\n`;
+  prompt += `กรุณาวางแผนทริปนี้อย่างละเอียด:\n`;
+  prompt += `1. **ตารางรายวัน**: แผนกิจกรรมชั่วโมงต่อชั่วโมง ${numdays} วัน\n`;
+  prompt += `2. **ที่พัก**: แนะนำ 2-3 ตัวเลือกในงบที่กำหนด\n`;
+  prompt += `3. **การเดินทาง**: วิธีเดินทางและค่าใช้จ่ายโดยประมาณ\n`;
+  prompt += `4. **อาหาร**: ร้านแนะนำและของกินที่ต้องลอง\n`;
+  prompt += `5. **เคล็ดลับ**: ข้อควรรู้ สภาพอากาศ และข้อควรระวัง\n\n`;
+  prompt += `**ตอบกลับเป็นภาษาไทยทั้งหมด** 🙏`;
+
+  return prompt;
+}
+
+
 // ============== PROMPT GENERATOR ==============
 
 function buildPrompt(data: any, config: PromptConfig): string {
+  if (data.tripname !== undefined || data.bestDates !== undefined) {
+    return buildSummaryPrompt(data, config);
+  }
+  
   switch (config.template) {
     case "itinerary":
       return buildItineraryPrompt(data, config);
@@ -494,6 +553,53 @@ export class PromptService {
       },
     };
   }
+
+  /**
+ * เรียก Claude จริงๆ แล้ว stream กลับไปที่ res
+ */
+  static async streamAIPlan(
+    data: any,
+    config: PromptConfig,
+    res: import("express").Response
+  ): Promise<void> {
+    const resolvedConfig: PromptConfig = {
+      template: "comprehensive",
+      model: "claude-sonnet-4-20250514",
+      temperature: 0.7,
+      maxTokens: 2048,
+      includeCOT: true,
+      ...config,
+    };
+
+    // ใช้ buildPrompt ที่มีอยู่แล้วในไฟล์นี้
+    const prompt = buildPrompt(data, resolvedConfig);
+
+    // ตั้ง header สำหรับ SSE (Server-Sent Events)
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+
+    const stream = anthropic.messages.stream({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: resolvedConfig.maxTokens ?? 2048,
+      system: DEFAULT_SYSTEM_PROMPT,
+      messages: [{ role: "user", content: prompt }],
+    });
+
+    for await (const chunk of stream) {
+      if (
+        chunk.type === "content_block_delta" &&
+        chunk.delta.type === "text_delta"
+      ) {
+        // ส่ง token ทีละตัวกลับไป frontend
+        res.write(`data: ${JSON.stringify({ text: chunk.delta.text })}\n\n`);
+      }
+    }
+
+    res.write("data: [DONE]\n\n");
+    res.end();
+  }
+
 }
 
 export default PromptService;

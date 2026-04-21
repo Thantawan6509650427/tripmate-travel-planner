@@ -1,5 +1,5 @@
 import express from 'express';
-import { addTripController, getMyTripsController, getPendingRequestsController, approveMemberController, rejectMemberController, deleteTripController, removeMemberController, getTripDetailController, getTripSummaryController, manualCloseController,getMemberController,requestJoinTripController,editController,addLinkController} from "../controllers/TripController.js";
+import { addTripController, getMyTripsController, getPendingRequestsController, approveMemberController, rejectMemberController, deleteTripController, removeMemberController, getTripDetailController, getTripSummaryController, manualCloseController,getMemberController,requestJoinTripController,editController,addLinkController, generateAIPlan} from "../controllers/TripController.js";
 import { auth } from "../middleware/auth.js"
 import { requireTripOwner ,requireTripMember} from "../middleware/role.js"
 
@@ -42,6 +42,8 @@ router.patch("/:tripId/manual-close",auth,requireTripOwner,manualCloseController
 
 router.post("/:tripId/edit-describe",auth,requireTripOwner,editController);
 
-router.post("/:tripId/addLink",auth,requireTripOwner,addLinkController)
+router.post("/:tripId/addLink",auth,requireTripOwner,addLinkController);
+
+router.post("/:tripId/ai-plan", auth, generateAIPlan);
 
 export default router;

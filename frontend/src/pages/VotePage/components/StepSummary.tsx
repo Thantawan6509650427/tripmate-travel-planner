@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { Calendar, DollarSign, MapPin, Sparkles, Brain, Settings,
          Check, ChevronDown, ChevronUp, Loader2, Copy, Code } from 'lucide-react';
 import type { TripDetail, DateMatchingResponse, BudgetVotingResponse } from '../../../types';
-import { voteAPI, tripAPI } from '../../../services/tripService';
+import { voteAPI, tripAPI, generateAIPlan } from '../../../services/tripService';
 import { getSocket } from '../../../socket';
 
 // ── Local Types ──
@@ -120,6 +120,8 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
   const [aiMeta, setAiMeta] = useState<any>(null);
   const voteTimerRef = useRef<any>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [aiResponse, setAiResponse] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const showToast = (message: string, type: 'success' | 'error') => {
     setToast({ message, type });
@@ -271,6 +273,31 @@ useEffect(() => {
         console.error('Failed to load AI summary', err);
       }
     };
+
+  const handleGeneratePlan = async () => {
+    if (!summaryData || isGenerating) return;
+    setIsGenerating(true);
+    setAiResponse('');
+
+    try {
+      await generateAIPlan(
+        trip.tripid,
+        {
+          tripname: trip.tripname,
+          numdays: trip.numdays,
+          bestDates: summaryData.bestDates,
+          avgBudget: summaryData.avgBudget,
+          topLocations: summaryData.topLocations,
+        },
+        { template: selectedTemplate },
+        (chunk) => setAiResponse(prev => prev + chunk)
+      );
+    } catch (err) {
+      showToast('❌ AI เกิดข้อผิดพลาด กรุณาลองใหม่', 'error');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   // ── Helpers ──
   const memberCount = trip.membercount || trip.members?.length || 0;
@@ -681,6 +708,61 @@ useEffect(() => {
 
         </div>
       </div>
+
+      {/* ── AI Plan Generator ── */}
+      {canViewSummary && (
+        <div className="bg-white rounded-xl shadow-lg p-5 space-y-4">
+          <h3 className="font-bold text-gray-800 flex items-center gap-2">
+            <Brain className="w-5 h-5 text-purple-600" />
+            สร้างแผนทริปด้วย AI
+          </h3>
+
+          {/* Template selector */}
+          <div className="flex flex-wrap gap-2">
+            {PROMPT_TEMPLATES.map(t => (
+              <button
+                key={t.id}
+                onClick={() => setSelectedTemplate(t.id)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition ${
+                  selectedTemplate === t.id
+                    ? 'bg-purple-600 text-white border-purple-600'
+                    : 'bg-white text-gray-600 border-gray-300 hover:border-purple-400'
+                }`}
+              >
+                {t.icon} {t.name}
+              </button>
+            ))}
+          </div>
+
+          {/* Generate button */}
+          <button
+            onClick={handleGeneratePlan}
+            disabled={isGenerating}
+            className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl transition shadow-lg"
+          >
+            {isGenerating ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader2 className="w-5 h-5 animate-spin" />
+                AI กำลังวางแผน...
+              </span>
+            ) : (
+              '✨ สร้างแผนทริป'
+            )}
+          </button>
+
+          {/* AI Response */}
+          {aiResponse && (
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 max-h-96 overflow-y-auto">
+              <pre className="whitespace-pre-wrap text-sm text-gray-800 font-sans leading-relaxed">
+                {aiResponse}
+                {isGenerating && (
+                  <span className="inline-block w-2 h-4 bg-purple-500 animate-pulse ml-1" />
+                )}
+              </pre>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── AI Prompt Studio (collapsed by default) ── */}
       <details className="bg-blue-100 rounded-xl shadow-lg overflow-hidden">

@@ -3,6 +3,7 @@ import { getUserTrips, requestJoinTripByCode, removeMemberService, approveMember
 import voteService from "../services/voteService.js";
 import { findOwnerByTrip } from "../models/tripModel.js";
 import { getIO, getUserSocket} from "../socket/socket.js";
+import { PromptService } from "../services/promptService.js";
 
 //เพิ่มสมาชิก
 export const addTripController = async (req: Request, res: Response) => {
@@ -985,6 +986,26 @@ export const addLinkController = async (req: Request, res: Response) => {
   }
 };
 
+export const generateAIPlan = async (req: Request, res: Response) => {
+  try {
+    const { tripId } = req.params;
+    const { tripData, config } = req.body;
 
-export default {addTripController, deleteTripController, getMyTripsController, requestJoinTripController, removeMemberController, getTripDetailController,getTripSummaryController, manualCloseController,getMemberController, editController,addLinkController};
+    if (!tripData) {
+      return res.status(400).json({ error: "tripData is required" });
+    }
+
+    // เรียก promptService ที่เราแก้ไป
+    await PromptService.streamAIPlan(tripData, config || {}, res);
+
+  } catch (err: any) {
+    console.error("generateAIPlan error:", err);
+    // ถ้า headers ยังไม่ถูกส่ง ค่อย return error
+    if (!res.headersSent) {
+      res.status(500).json({ error: "AI generation failed" });
+    }
+  }
+};
+
+export default {addTripController, deleteTripController, getMyTripsController, requestJoinTripController, removeMemberController, getTripDetailController,getTripSummaryController, manualCloseController,getMemberController, editController,addLinkController, approveMemberController, rejectMemberController, generateAIPlan};
 //deleteMemberController

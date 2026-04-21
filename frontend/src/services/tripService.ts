@@ -750,6 +750,39 @@ export const notiApi = {
   }
 };
 
+export const generateAIPlan = async (
+  tripId: string,
+  tripData: object,
+  config: object,
+  onChunk: (text: string) => void
+): Promise<void> => {
+  const response = await fetch(`/api/trips/${tripId}/ai-plan`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+    body: JSON.stringify({ tripData, config }),
+  });
+
+  const reader = response.body!.getReader();
+  const decoder = new TextDecoder();
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    for (const line of decoder.decode(value).split("\n")) {
+      if (!line.startsWith("data: ")) continue;
+      const raw = line.slice(6);
+      if (raw === "[DONE]") return;
+      try {
+        onChunk(JSON.parse(raw).text);
+      } catch {}
+    }
+  }
+};
+
 export default {
   ...tripAPI,
   ...voteAPI
