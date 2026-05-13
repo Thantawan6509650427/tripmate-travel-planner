@@ -21,7 +21,8 @@ import type {
   DateMatchingResponse,
   BudgetVotingResponse, 
   LocationScores,
-  LocationVoteResponse
+  LocationVoteResponse,
+  TripRecommendationResult
 } from '../types';
 
 // Import Mock Data
@@ -178,6 +179,18 @@ export const tripAPI = {
           method: "GET",
         }
       );
+
+      return await response.json();
+    } catch (error) {
+      return handleApiError(error);
+    }
+  },
+
+  getRecommendations: async (tripId: string): Promise<ApiResponse<TripRecommendationResult>> => {
+    try {
+      const response = await apiFetch(`/trips/${tripId}/recommendations`, {
+        method: "GET",
+      });
 
       return await response.json();
     } catch (error) {
@@ -756,11 +769,10 @@ export const generateAIPlan = async (
   config: object,
   onChunk: (text: string) => void
 ): Promise<void> => {
-  const response = await fetch(`/api/trips/${tripId}/ai-plan`, {
+  const response = await apiFetch(`/trips/${tripId}/ai-plan`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${localStorage.getItem("token")}`,
     },
     body: JSON.stringify({ tripData, config }),
   });

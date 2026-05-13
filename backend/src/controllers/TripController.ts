@@ -990,7 +990,8 @@ export const generateAIPlan = async (req: Request, res: Response) => {
   try {
     const { tripId } = req.params;
     const { tripData, config } = req.body;
-
+    console.log("tripData:", tripData);
+    console.log("config:", config);
     if (!tripData) {
       return res.status(400).json({ error: "tripData is required" });
     }

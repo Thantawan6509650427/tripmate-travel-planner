@@ -1,6 +1,6 @@
 import { Server } from "socket.io";
 
-let io: Server;
+let io: Server | undefined;
 
 // เก็บ userId -> socketId
 const onlineUsers: Record<string, string> = {};
@@ -52,7 +52,12 @@ export const initSocket = (server: any) => {
 
 export const getIO = () => {
   if (!io) {
-    throw new Error("Socket not initialized");
+    console.warn("Socket not initialized; skipping realtime emit");
+    return {
+      to: () => ({
+        emit: () => undefined
+      })
+    } as unknown as Server;
   }
   return io;
 };

@@ -109,7 +109,7 @@ export const markAllNotificationAsReadController = async (req: Request,res: Resp
       });
     }
 
-    const result = await notiservice.markNotificationAsRead(user_id);
+    const result = await notiservice.markAllNotificationsAsRead(user_id);
 
     if (!result.success) {
       return res.status(400).json({

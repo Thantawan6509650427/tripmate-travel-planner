@@ -219,6 +219,71 @@ export interface TripSummaryResult {
   };
 }
 
+export interface PlaceRecommendation {
+  place: {
+    id: string;
+    name: string;
+    province: string;
+    category: string;
+    estimatedCost: number;
+    durationHours: number;
+    lat: number;
+    lng: number;
+    popularity: number;
+    tags: string[];
+  };
+  metrics: {
+    voteScore: number;
+    preferenceMatch: number;
+    budgetFit: number;
+    popularity: number;
+    distanceScore: number;
+    finalScore: number;
+  };
+  reasons: string[];
+}
+
+export interface ItineraryDay {
+  day: number;
+  totalCost: number;
+  totalHours: number;
+  totalTravelKm: number;
+  stops: Array<{
+    order: number;
+    placeId: string;
+    name: string;
+    province: string;
+    category: string;
+    estimatedCost: number;
+    durationHours: number;
+    travelDistanceKmFromPrevious: number;
+  }>;
+}
+
+export interface TripRecommendationResult {
+  tripId: string;
+  generatedAt: string;
+  inputs: {
+    topLocations: Array<{
+      place: string;
+      region: string;
+      total_score: number;
+      voteCount: number;
+      rank1Count: number;
+    }>;
+    medianBudget: number;
+    bestDates: string[];
+  };
+  recommendations: PlaceRecommendation[];
+  itinerary: ItineraryDay[];
+  evaluation: {
+    groupAgreementScore: number;
+    budgetConfidenceScore: number;
+    availabilityConfidenceScore: number;
+    recommendationCount: number;
+  };
+}
+
 // ============================================================================
 // CREATE/UPDATE TRIP
 // ============================================================================
@@ -561,5 +626,4 @@ export interface WeightedDateResult {
 }
 
 // response wrapper จาก backend
-
 

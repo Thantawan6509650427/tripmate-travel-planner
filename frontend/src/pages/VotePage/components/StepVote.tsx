@@ -20,6 +20,7 @@ export const StepVote: React.FC<StepVoteProps> = ({ trip, matchingData, initialD
   const [calendarMonth, setCalendarMonth] = useState(new Date());
   const [loading, setLoading] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   const [matchingInfo, setMatchingInfo] = useState<MatchingData | null>(null);
 
@@ -90,6 +91,7 @@ export const StepVote: React.FC<StepVoteProps> = ({ trip, matchingData, initialD
   // ================= HANDLERS =================
 
   const toggleDate = (dateStr: string) => {
+    setError(null);
     setSelectedDates(prev =>
       prev.includes(dateStr)
         ? prev.filter(d => d !== dateStr)
@@ -99,25 +101,26 @@ export const StepVote: React.FC<StepVoteProps> = ({ trip, matchingData, initialD
 
   const handleSave = async () => {
     if (selectedDates.length === 0) {
-      alert("กรุณาเลือกอย่างน้อย 1 วัน");
+      setError("กรุณาเลือกอย่างน้อย 1 วัน");
       return;
     }
 
     try {
       setLoading(true);
       if (!trip.tripid || !trip.ownerid) {
-        alert("ไม่พบข้อมูลทริปหรือผู้ใช้");
+        setError("ไม่พบข้อมูลทริปหรือผู้ใช้");
         return;
       }
       if (onSave) {
         await onSave(selectedDates);
       }
+      setError(null);
       setJustSaved(true);
       setHasSaved(true);
       setIsAnalysisOpen(true);
     } catch (err: any) {
       console.error(err); 
-      alert(err?.response?.data?.message || "บันทึกไม่สำเร็จ");
+      setError(err?.response?.data?.message || "บันทึกไม่สำเร็จ");
     } finally {
       setLoading(false);
     }
@@ -426,6 +429,19 @@ export const StepVote: React.FC<StepVoteProps> = ({ trip, matchingData, initialD
           </div>
         </div>
       )} */}
+
+        {error && (
+          <div className="flex items-start justify-between gap-3 bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700">
+            <span>{error}</span>
+            <button
+              type="button"
+              onClick={() => setError(null)}
+              className="font-semibold text-red-600 hover:text-red-800"
+            >
+              ปิด
+            </button>
+          </div>
+        )}
 
         {/* ปุ่มบันทึก */}
         <button

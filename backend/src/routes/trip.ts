@@ -1,5 +1,6 @@
 import express from 'express';
 import { addTripController, getMyTripsController, getPendingRequestsController, approveMemberController, rejectMemberController, deleteTripController, removeMemberController, getTripDetailController, getTripSummaryController, manualCloseController,getMemberController,requestJoinTripController,editController,addLinkController, generateAIPlan} from "../controllers/TripController.js";
+import { getTripRecommendationsController } from "../controllers/recommendationController.js";
 import { auth } from "../middleware/auth.js"
 import { requireTripOwner ,requireTripMember} from "../middleware/role.js"
 
@@ -18,6 +19,8 @@ router.patch("/:tripId/reject/:userId",auth,rejectMemberController);
 
 //  ดึงสรุปผลทริป (สำหรับหน้า summary)
 router.get("/:tripId/summary",auth,getTripSummaryController);
+
+router.get("/:tripId/recommendations", auth, getTripRecommendationsController);
 
 // ดึงทริปทั้งหมดของผู้ใช้(เจ้าของ + เข้าร่วม)*  
 router.get("/all-my-trips", auth, getMyTripsController);

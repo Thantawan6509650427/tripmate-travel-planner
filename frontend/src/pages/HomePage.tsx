@@ -165,7 +165,7 @@ const HomePage: React.FC = () => {
       console.error("Load trips failed:", error);
       setMyTrips([]);
       setInvitedTrips([]);
-      alert("ไม่สามารถโหลดข้อมูลทริปได้ กรุณาลองใหม่อีกครั้ง");
+      setDialogMessage("ไม่สามารถโหลดข้อมูลทริปได้ กรุณาลองใหม่อีกครั้ง");
     } finally {
       setLoading(false);
     }
@@ -192,8 +192,8 @@ const HomePage: React.FC = () => {
   // ✅ เข้าร่วมทริป
   const handleJoinTrip = async (code: string) => {
     const cleanCode = code.trim().toUpperCase();
-    if (!cleanCode) { alert("กรุณากรอกรหัสห้อง"); return; }
-    if (!validateInviteCode(cleanCode)) { alert("รูปแบบรหัสไม่ถูกต้อง"); return; }
+    if (!cleanCode) { setDialogMessage("กรุณากรอกรหัสห้อง"); return; }
+    if (!validateInviteCode(cleanCode)) { setDialogMessage("รูปแบบรหัสไม่ถูกต้อง"); return; }
     if (joiningTrip) return;
 
     try {
@@ -220,13 +220,13 @@ const HomePage: React.FC = () => {
   const handleCreateTrip = async () => {
     const nameValidation = validateTripName(newTrip.name);
     if (!nameValidation.valid) {
-      alert(nameValidation.error);
+      setDialogMessage(nameValidation.error || 'ชื่อทริปไม่ถูกต้อง');
       return;
     }
 
     const daysValidation = validateDays(Number(newTrip.days));
     if (!daysValidation.valid) {
-      alert(daysValidation.error);
+      setDialogMessage(daysValidation.error || 'จำนวนวันไม่ถูกต้อง');
       return;
     }
 
@@ -241,12 +241,6 @@ const HomePage: React.FC = () => {
         throw new Error(response.message || "ไม่สามารถสร้างทริปได้");
       }
 
-      const inviteCode = response.data.invite_code;
-      
-      // alert(
-      //   `สร้างทริปสำเร็จ!\n\nรหัสเชิญ: ${inviteCode}\n\nกรุณาบันทึกรหัสนี้ไว้`
-      // );
-
       navigate(`/votepage/${response.data.trip_id}`);
       setShowCreateModal(false);
       setNewTrip({ name: "", days: "", detail: "" });
@@ -255,7 +249,7 @@ const HomePage: React.FC = () => {
       console.error('Error creating trip:', error);
       const errorMessage =
         error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการสร้างทริป";
-      alert(`เกิดข้อผิดพลาด: ${errorMessage}`);
+      setDialogMessage(`เกิดข้อผิดพลาด: ${errorMessage}`);
     }
   };
   

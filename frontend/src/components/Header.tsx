@@ -61,6 +61,32 @@ const Header: React.FC<HeaderProps> = ({ onLogout }) => {
   const [, forceUpdate] = useState(0);
   const [toast, setToast] = useState<{ text: string; type: string } | null>(null);
 
+  const showToast = (text: string, type: string = "info") => {
+    setToast({ text, type });
+    setTimeout(() => setToast(null), 4000);
+  };
+
+  const getNotificationErrorMessage = (code?: string) => {
+    switch (code) {
+      case "AUTH_UNAUTHORIZED":
+        return "กรุณาเข้าสู่ระบบอีกครั้ง";
+      case "NOTI_MARK_FAILED":
+      case "NOTI_MARK_ERROR":
+        return "ไม่สามารถทำเครื่องหมายว่าอ่านแล้วได้";
+      case "NOTI_MARK_ALL_FAILED":
+      case "NOTI_MARK_ALL_ERROR":
+        return "ไม่สามารถทำเครื่องหมายว่าอ่านทั้งหมดได้";
+      case "NOTI_DELETE_FAILED":
+      case "NOTI_DELETE_ERROR":
+        return "ไม่สามารถลบการแจ้งเตือนได้";
+      case "NOTI_FETCH_FAILED":
+      case "NOTI_FETCH_ERROR":
+        return "ไม่สามารถโหลดการแจ้งเตือนได้";
+      default:
+        return "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง";
+    }
+  };
+
   useEffect(() => {
     const fetchNoti = async () => {
       try {
@@ -78,6 +104,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout }) => {
         }
       } catch (err) {
         console.error("Failed to fetch notifications:", err);
+        showToast("ไม่สามารถโหลดการแจ้งเตือนได้", "error");
       }
     };
     fetchNoti();
@@ -110,8 +137,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout }) => {
 
         const latest = mapped.find((n: any) => !n.read);
         if (latest) {
-          setToast({ text: latest.text, type: latest.type });
-          setTimeout(() => setToast(null), 4000);
+          showToast(latest.text, latest.type);
         }
 
         // ✅ ถ้ามี noti trip_confirmed/archived/completed และอยู่ใน votepage ของทริปนั้น
@@ -127,6 +153,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout }) => {
       }
     } catch (err) {
       console.error("Failed to reload notifications:", err);
+      showToast("ไม่สามารถอัปเดตการแจ้งเตือนได้", "error");
     }
   };
 
@@ -208,15 +235,39 @@ const Header: React.FC<HeaderProps> = ({ onLogout }) => {
   };
 
   const markAllAsRead = async () => {
+    const previous = notifications;
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true }))); // optimistic
-    await notiApi.markAllAsRead();
+
+    try {
+      const res = await notiApi.markAllAsRead();
+      if (!res?.success) {
+        setNotifications(previous);
+        showToast(getNotificationErrorMessage(res?.code), "error");
+      }
+    } catch (err) {
+      console.error("Mark all notifications failed:", err);
+      setNotifications(previous);
+      showToast("ไม่สามารถทำเครื่องหมายว่าอ่านทั้งหมดได้", "error");
+    }
   };
 
   const markAsRead = async (id: string) => {
+    const previous = notifications;
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n))
     );
-    await notiApi.markAsRead(id);
+
+    try {
+      const res = await notiApi.markAsRead(id);
+      if (!res?.success) {
+        setNotifications(previous);
+        showToast(getNotificationErrorMessage(res?.code), "error");
+      }
+    } catch (err) {
+      console.error("Mark notification failed:", err);
+      setNotifications(previous);
+      showToast("ไม่สามารถทำเครื่องหมายว่าอ่านแล้วได้", "error");
+    }
   };
 
   const handleNotificationClick = (notification: Notification) => {
@@ -230,8 +281,20 @@ const Header: React.FC<HeaderProps> = ({ onLogout }) => {
 
   const deleteNotification = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    const previous = notifications;
     setNotifications((prev) => prev.filter((n) => n.id !== id)); // optimistic
-    await notiApi.deleteNoti(id);
+
+    try {
+      const res = await notiApi.deleteNoti(id);
+      if (!res?.success) {
+        setNotifications(previous);
+        showToast(getNotificationErrorMessage(res?.code), "error");
+      }
+    } catch (err) {
+      console.error("Delete notification failed:", err);
+      setNotifications(previous);
+      showToast("ไม่สามารถลบการแจ้งเตือนได้", "error");
+    }
   };
 
   const addMockNotification = () => {
@@ -510,10 +573,12 @@ const Header: React.FC<HeaderProps> = ({ onLogout }) => {
 
       {/* ✅ Toast Notification */}
       {toast && (
-        <div className="fixed top-20 right-4 z-[9999] max-w-sm bg-white border border-gray-200 rounded-xl shadow-2xl px-4 py-3 flex items-start gap-3 animate-in slide-in-from-right duration-300">
+        <div className={`fixed top-20 right-4 z-[9999] max-w-sm bg-white border rounded-xl shadow-2xl px-4 py-3 flex items-start gap-3 animate-in slide-in-from-right duration-300 ${
+          toast.type === "error" ? "border-red-200" : "border-gray-200"
+        }`}>
           <span className="text-xl flex-shrink-0">🔔</span>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-800">{toast.text}</p>
+            <p className={`text-sm font-medium ${toast.type === "error" ? "text-red-700" : "text-gray-800"}`}>{toast.text}</p>
           </div>
           <button onClick={() => setToast(null)} className="text-gray-400 hover:text-gray-600 flex-shrink-0">
             <X className="w-4 h-4" />

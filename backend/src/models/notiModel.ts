@@ -83,7 +83,6 @@ export const markNotificationAsRead = async (notification_id: string) => {
         await connection.query(`
             UPDATE notifications SET is_read = 1, read_at = CURRENT_TIMESTAMP WHERE notification_id = ?
         `, [notification_id]);
-        connection.release();
         return {
             success: true,
             message: "Notification marked as read"
@@ -93,6 +92,8 @@ export const markNotificationAsRead = async (notification_id: string) => {
             success: false,
             message: error instanceof Error ? error.message : "An error occurred while marking the notification as read"
         };
+    } finally {
+        connection.release();
     }
 };
 
@@ -102,7 +103,6 @@ export const markAllNotificationsAsReadForTrip = async (trip_id: string, user_id
         await connection.query(`
             UPDATE notifications SET is_read = 1, read_at = CURRENT_TIMESTAMP WHERE trip_id = ? AND user_id = ?
         `, [trip_id, user_id]);
-        connection.release();
         return {
             success: true,
             message: "All notifications for the trip marked as read"
@@ -112,7 +112,32 @@ export const markAllNotificationsAsReadForTrip = async (trip_id: string, user_id
             success: false,
             message: error instanceof Error ? error.message : "An error occurred while marking all notifications as read for the trip"
         };
+    } finally {
+        connection.release();
     }   
+};
+
+export const markAllNotificationsAsRead = async (user_id: string) => {
+    const connection = await pool.getConnection();
+    try {
+        await connection.query(`
+            UPDATE notifications
+            SET is_read = 1, read_at = CURRENT_TIMESTAMP
+            WHERE user_id = ? AND is_read = 0
+        `, [user_id]);
+
+        return {
+            success: true,
+            message: "All notifications marked as read"
+        };
+    } catch (error) {
+        return {
+            success: false,
+            message: error instanceof Error ? error.message : "An error occurred while marking all notifications as read"
+        };
+    } finally {
+        connection.release();
+    }
 };
 
 export const deleteNotification = async (notification_id: string,user_id: string) => {
@@ -160,9 +185,8 @@ export const countUnreadNotifications = async ( user_id: string) => {
     const connection = await pool.getConnection();
     try {
         const [rows] = await connection.query(`
-            SELECT COUNT(*) AS unread_count FROM notifications WHERE user_id = ? AND trip_id = ? AND is_read = 0
+            SELECT COUNT(*) AS unread_count FROM notifications WHERE user_id = ? AND is_read = 0
         `, [user_id]);
-        connection.release();
         const unreadCount = (rows as any[])[0].unread_count;
         return {
             success: true,
@@ -173,6 +197,8 @@ export const countUnreadNotifications = async ( user_id: string) => {
             success: false,
             message: error instanceof Error ? error.message : "An error occurred while counting unread notifications"
         };
+    } finally {
+        connection.release();
     }   
 };
 
@@ -181,6 +207,7 @@ export default {
     getNotificationsByUserId,
     markNotificationAsRead,
     markAllNotificationsAsReadForTrip,
+    markAllNotificationsAsRead,
     deleteNotification,
     countUnreadNotifications
 }

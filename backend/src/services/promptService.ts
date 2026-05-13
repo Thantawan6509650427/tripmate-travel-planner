@@ -1,10 +1,11 @@
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import dotenv from "dotenv";
 dotenv.config();
 
-if (!process.env.OPENAI_API_KEY) {
-  throw new Error("OPENAI_API_KEY missing");
+if (!process.env.GEMINI_API_KEY) {
+  throw new Error("GEMINI_API_KEY missing");
 }
 
 const openai = new OpenAI({
@@ -15,6 +16,7 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 // ============== TYPES ==============
 
 export type AIModel =
@@ -554,9 +556,6 @@ export class PromptService {
     };
   }
 
-  /**
- * เรียก Claude จริงๆ แล้ว stream กลับไปที่ res
- */
   static async streamAIPlan(
     data: any,
     config: PromptConfig,
@@ -564,42 +563,39 @@ export class PromptService {
   ): Promise<void> {
     const resolvedConfig: PromptConfig = {
       template: "comprehensive",
-      model: "claude-sonnet-4-20250514",
       temperature: 0.7,
       maxTokens: 2048,
       includeCOT: true,
       ...config,
     };
 
-    // ใช้ buildPrompt ที่มีอยู่แล้วในไฟล์นี้
     const prompt = buildPrompt(data, resolvedConfig);
 
-    // ตั้ง header สำหรับ SSE (Server-Sent Events)
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
 
-    const stream = anthropic.messages.stream({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: resolvedConfig.maxTokens ?? 2048,
-      system: DEFAULT_SYSTEM_PROMPT,
-      messages: [{ role: "user", content: prompt }],
-    });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-    for await (const chunk of stream) {
-      if (
-        chunk.type === "content_block_delta" &&
-        chunk.delta.type === "text_delta"
-      ) {
-        // ส่ง token ทีละตัวกลับไป frontend
-        res.write(`data: ${JSON.stringify({ text: chunk.delta.text })}\n\n`);
+    console.log("🔑 GEMINI_API_KEY exists:", !!process.env.GEMINI_API_KEY);
+    console.log("📡 Calling Gemini API...");
+
+    const result = await model.generateContentStream([
+      { text: DEFAULT_SYSTEM_PROMPT + "\n\n" + prompt }
+    ]);
+
+    console.log("✅ Gemini responded");
+
+    for await (const chunk of result.stream) {
+      const text = chunk.text();
+      if (text) {
+        res.write(`data: ${JSON.stringify({ text })}\n\n`);
       }
     }
 
     res.write("data: [DONE]\n\n");
     res.end();
   }
-
 }
 
 export default PromptService;

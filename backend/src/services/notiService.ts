@@ -251,6 +251,28 @@ export const markNotificationAsRead = async (notification_id: string) => {
     }
 };
 
+export const markAllNotificationsAsRead = async (user_id: string) => {
+    try {
+        const result = await notiModel.markAllNotificationsAsRead(user_id);
+        if (result.success) {
+            return {
+                success: true
+            };
+        }
+
+        return {
+            success: false,
+            message: result.message || "Failed to mark all notifications as read"
+        };
+    } catch (error) {
+        console.error("Error marking all notifications as read:", error instanceof Error ? error.message : error);
+        return {
+            success: false,
+            message: error instanceof Error ? error.message : "An error occurred while marking all notifications as read"
+        };
+    }
+};
+
 export const getUnreadCount = async (user_id: string) => {
     try {
         const result = await notiModel.countUnreadNotifications(user_id);
@@ -518,6 +540,7 @@ export default {
     notifyTripArchived,
     notifyTripCompleted,
     markNotificationAsRead,
+    markAllNotificationsAsRead,
     getUserNotifications,
     getUnreadCount,
     deleteNotification,

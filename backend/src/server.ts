@@ -20,8 +20,10 @@ async function bootstrap() {
     app.use(cors({
       origin: (origin, callback) => {
         const allowedOrigin = process.env.FRONTEND_URL;
+        const isDev = process.env.NODE_ENV === "development";
+        const isLocalhost = origin && /^http:\/\/localhost:\d+$/.test(origin);
 
-        if (!origin || origin === allowedOrigin) {
+        if (!origin || origin === allowedOrigin || (isDev && isLocalhost)) {
           callback(null, true);
         } else {
           callback(new Error("Not allowed by CORS"));

@@ -51,6 +51,7 @@ const VotePage: React.FC = () => {
   const [locationAnalysis, setLocationAnalysis] = useState<any>(null);
   const [locationVotedCount, setLocationVotedCount] = useState(0);
   const [dialogMessage, setDialogMessage] = useState<string | null>(null);
+  const [dialogClosePath, setDialogClosePath] = useState<string | null>(null);
 
   // ✅ Pending Requests state
   const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
@@ -62,6 +63,11 @@ const VotePage: React.FC = () => {
 
   const displayCode = inviteCode || tripCode;
   const isClosed = trip?.status === 'completed' || trip?.status === 'archived' || trip?.status === 'confirmed';
+
+  const showDialog = (message: string, closePath?: string) => {
+    setDialogMessage(message);
+    setDialogClosePath(closePath ?? null);
+  };
 
   const isSummaryUnlocked = (tripData: TripDetail): boolean => {
     if (tripData.status === 'completed' || tripData.status === 'archived' || tripData.status === 'confirmed') return true;
@@ -247,7 +253,7 @@ useEffect(() => {
 
   console.log("Removed from trip:", data.trip_id);
 
-  setDialogMessage("คุณถูกนำออกจากทริป");
+  showDialog("คุณถูกนำออกจากทริป", "/homepage");
 
   });
 
@@ -389,11 +395,11 @@ const reloadTripData = async (tripId?: string) => {
         setPendingRequests(prev => prev.filter(r => r.user_id !== userId));
         await reloadTripData();
       } else {
-        alert(res.message || 'อนุมัติไม่สำเร็จ');
+        showDialog(res.message || 'อนุมัติไม่สำเร็จ');
       }
     } catch (e) {
       console.error('Approve failed:', e);
-      alert('เกิดข้อผิดพลาด กรุณาลองใหม่');
+      showDialog('เกิดข้อผิดพลาด กรุณาลองใหม่');
     }
   };
 
@@ -406,11 +412,11 @@ const reloadTripData = async (tripId?: string) => {
         setPendingRequests(prev => prev.filter(r => r.user_id !== userId));
         await reloadTripData();
       } else {
-        alert(res.message || 'ปฏิเสธไม่สำเร็จ');
+        showDialog(res.message || 'ปฏิเสธไม่สำเร็จ');
       }
     } catch (e) {
       console.error('Reject failed:', e);
-      alert('เกิดข้อผิดพลาด กรุณาลองใหม่');
+      showDialog('เกิดข้อผิดพลาด กรุณาลองใหม่');
     }
   };
 
@@ -458,10 +464,10 @@ const reloadTripData = async (tripId?: string) => {
         setMembers(prev => prev.filter(m => m.member_id !== memberId));
         await reloadTripData();
       } else {
-        alert(res.message || 'ลบสมาชิกไม่สำเร็จ');
+        showDialog(res.message || 'ลบสมาชิกไม่สำเร็จ');
       }
     } catch (e) {
-      alert('เกิดข้อผิดพลาด กรุณาลองใหม่');
+      showDialog('เกิดข้อผิดพลาด กรุณาลองใหม่');
     }
   };
 
@@ -589,7 +595,7 @@ const reloadTripData = async (tripId?: string) => {
       }
     } catch (error) {
       console.error('Delete trip failed:', error);
-      alert('ลบทริปไม่สำเร็จ กรุณาลองใหม่');
+      showDialog('ลบทริปไม่สำเร็จ กรุณาลองใหม่');
     }
   };
 
@@ -990,8 +996,10 @@ const reloadTripData = async (tripId?: string) => {
 
             <button
               onClick={() => {
+                const closePath = dialogClosePath;
                 setDialogMessage(null);
-                navigate("/homepage");
+                setDialogClosePath(null);
+                if (closePath) navigate(closePath);
               }}
               className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white"
             >

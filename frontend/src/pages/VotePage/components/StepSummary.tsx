@@ -2,9 +2,10 @@
 import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { Calendar, DollarSign, MapPin, Sparkles, Brain, Settings,
          Check, ChevronDown, ChevronUp, Loader2, Copy, Code } from 'lucide-react';
-import type { TripDetail, DateMatchingResponse, BudgetVotingResponse } from '../../../types';
+import type { TripDetail, DateMatchingResponse, BudgetVotingResponse, TripRecommendationResult } from '../../../types';
 import { voteAPI, tripAPI, generateAIPlan } from '../../../services/tripService';
 import { getSocket } from '../../../socket';
+import ReactMarkdown from 'react-markdown';
 
 // ── Local Types ──
 type AIModel = 'gpt-4' | 'gpt-3.5-turbo' | 'claude-3-opus' | 'claude-3-sonnet' | 'gemini-pro';
@@ -110,6 +111,7 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
   const [activeTab, setActiveTab] = useState<'templates' | 'models'>('templates');
   const [copied, setCopied] = useState<Record<string, boolean>>({});
   const [isClosing, setIsClosing] = useState(false);
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [isEditingDesc, setIsEditingDesc] = useState(false);
   const [editedDesc, setEditedDesc] = useState(trip.description || '');
   const [isSavingDesc, setIsSavingDesc] = useState(false);
@@ -122,6 +124,8 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [aiResponse, setAiResponse] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [recommendationData, setRecommendationData] = useState<TripRecommendationResult | null>(null);
+  const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false);
 
   const showToast = (message: string, type: 'success' | 'error') => {
     setToast({ message, type });
@@ -239,6 +243,7 @@ useEffect(() => {
   const handleAddInfo = () =>{
     fetchVoteData();
     fetchAiSummary();
+    fetchRecommendations();
   }
 
   socket.on("vote_updated", handleVoteUpdate);
@@ -260,6 +265,7 @@ useEffect(() => {
     if (!trip?.tripid) return;
     if (!canViewSummary) return; // ← guard 
     fetchAiSummary();
+    fetchRecommendations();
   }, [trip?.tripid, selectedTemplate, canViewSummary]);
 
   const fetchAiSummary = async () => {
@@ -273,6 +279,22 @@ useEffect(() => {
         console.error('Failed to load AI summary', err);
       }
     };
+
+  const fetchRecommendations = async () => {
+    if (!trip?.tripid) return;
+
+    try {
+      setIsLoadingRecommendations(true);
+      const res = await tripAPI.getRecommendations(trip.tripid);
+      if (res.success && res.data) {
+        setRecommendationData(res.data);
+      }
+    } catch (err) {
+      console.error('Failed to load recommendations', err);
+    } finally {
+      setIsLoadingRecommendations(false);
+    }
+  };
 
   const handleGeneratePlan = async () => {
     if (!summaryData || isGenerating) return;
@@ -290,9 +312,13 @@ useEffect(() => {
           topLocations: summaryData.topLocations,
         },
         { template: selectedTemplate },
-        (chunk) => setAiResponse(prev => prev + chunk)
+        (chunk) => {
+          console.log('chunk received:', chunk);
+          setAiResponse(prev => prev + chunk);
+        }
       );
     } catch (err) {
+      console.error('AI error:', err);
       showToast('❌ AI เกิดข้อผิดพลาด กรุณาลองใหม่', 'error');
     } finally {
       setIsGenerating(false);
@@ -314,7 +340,6 @@ useEffect(() => {
   };
 
   const handleCloseVoting = async () => {
-    if (!confirm('ยืนยันปิดการโหวต? สมาชิกจะไม่สามารถแก้ไขข้อมูลได้อีก')) return;
     try {
       setIsClosing(true);
       await voteAPI.manualClose(trip.tripid);
@@ -709,6 +734,100 @@ useEffect(() => {
         </div>
       </div>
 
+      {canViewSummary && (
+        <div className="bg-white rounded-xl shadow-lg p-5 space-y-5">
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="font-bold text-gray-800 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-indigo-600" />
+              AI Recommendations
+            </h3>
+            {isLoadingRecommendations && (
+              <Loader2 className="w-4 h-4 text-indigo-500 animate-spin" />
+            )}
+          </div>
+
+          {recommendationData ? (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[
+                  ['Group agreement', recommendationData.evaluation.groupAgreementScore],
+                  ['Budget confidence', recommendationData.evaluation.budgetConfidenceScore],
+                  ['Date confidence', recommendationData.evaluation.availabilityConfidenceScore],
+                  ['Places', recommendationData.evaluation.recommendationCount],
+                ].map(([label, value]) => (
+                  <div key={label} className="rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-2">
+                    <p className="text-xs text-indigo-600">{label}</p>
+                    <p className="text-lg font-bold text-indigo-900">{value}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {recommendationData.recommendations.slice(0, 4).map((item) => (
+                  <div key={item.place.id} className="rounded-lg border border-gray-200 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-bold text-gray-900">{item.place.name}</p>
+                        <p className="text-xs text-gray-500">
+                          {item.place.province} · {item.place.category} · ฿{formatCurrency(item.place.estimatedCost)}
+                        </p>
+                      </div>
+                      <span className="rounded-full bg-green-100 px-2 py-1 text-xs font-bold text-green-700">
+                        {item.metrics.finalScore}/100
+                      </span>
+                    </div>
+                    <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+                      <span className="rounded bg-blue-50 px-2 py-1 text-blue-700">Vote {item.metrics.voteScore}</span>
+                      <span className="rounded bg-purple-50 px-2 py-1 text-purple-700">Pref {item.metrics.preferenceMatch}</span>
+                      <span className="rounded bg-emerald-50 px-2 py-1 text-emerald-700">Budget {item.metrics.budgetFit}</span>
+                    </div>
+                    <ul className="mt-3 space-y-1 text-xs text-gray-600">
+                      {item.reasons.slice(0, 2).map((reason) => (
+                        <li key={reason}>- {reason}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+
+              <details className="group">
+                <summary className="cursor-pointer list-none rounded-lg border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-700">
+                  Optimized itinerary
+                </summary>
+                <div className="mt-3 space-y-3">
+                  {recommendationData.itinerary.map((day) => (
+                    <div key={day.day} className="rounded-lg border border-gray-200 p-4">
+                      <div className="mb-2 flex items-center justify-between">
+                        <p className="font-bold text-gray-800">Day {day.day}</p>
+                        <p className="text-xs text-gray-500">
+                          {day.totalHours}h · {day.totalTravelKm}km · ฿{formatCurrency(day.totalCost)}
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        {day.stops.map((stop) => (
+                          <div key={stop.placeId} className="flex items-center justify-between rounded bg-gray-50 px-3 py-2 text-sm">
+                            <span className="font-medium text-gray-700">
+                              {stop.order}. {stop.name}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {stop.durationHours}h · +{stop.travelDistanceKmFromPrevious}km
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            </>
+          ) : (
+            <div className="rounded-lg border border-dashed border-gray-300 p-4 text-sm text-gray-500">
+              Recommendations will appear after the trip has vote, budget, and summary data.
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ── AI Plan Generator ── */}
       {canViewSummary && (
         <div className="bg-white rounded-xl shadow-lg p-5 space-y-4">
@@ -752,227 +871,15 @@ useEffect(() => {
 
           {/* AI Response */}
           {aiResponse && (
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 max-h-96 overflow-y-auto">
-              <pre className="whitespace-pre-wrap text-sm text-gray-800 font-sans leading-relaxed">
-                {aiResponse}
-                {isGenerating && (
-                  <span className="inline-block w-2 h-4 bg-purple-500 animate-pulse ml-1" />
-                )}
-              </pre>
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 max-h-96 overflow-y-auto prose prose-sm max-w-none">
+              <ReactMarkdown>{aiResponse}</ReactMarkdown>
+              {isGenerating && (
+                <span className="inline-block w-2 h-4 bg-purple-500 animate-pulse ml-1" />
+              )}
             </div>
           )}
         </div>
       )}
-
-      {/* ── AI Prompt Studio (collapsed by default) ── */}
-      <details className="bg-blue-100 rounded-xl shadow-lg overflow-hidden">
-        <summary className="px-5 py-4 cursor-pointer flex items-center gap-2 text-gray-500 hover:bg-gray-50 transition select-none list-none">
-          <Brain className="w-4 h-4" />
-          <span className="text-sm font-medium text-gray-800">🤖 AI Prompt Studio</span>
-          <span className="ml-auto text-xs text-gray-400">คลิกเพื่อขยาย</span>
-        </summary>
-
-        <div className="border-t border-gray-100 p-5 space-y-5">
-          {/* Blur overlay ถ้ายังไม่ unlock */}
-          {!canViewSummary && (
-            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-xl">
-              <div className="absolute inset-0 bg-white/70 backdrop-blur-sm rounded-xl" />
-              <div className="relative z-10 text-center px-6">
-                <div className="text-4xl mb-2">🤖🔒</div>
-                <p className="font-bold text-gray-700">AI Prompt พร้อมใช้เมื่อปิดการโหวต</p>
-              </div>
-            </div>
-          )}
-
-          {/* Header Tabs */}
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-              <Brain className="w-5 h-5 text-purple-600" />
-              AI Prompt Studio
-            </h3>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setActiveTab('templates')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${activeTab === 'templates' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-              >
-                Templates
-              </button>
-              <button
-                onClick={() => setActiveTab('models')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${activeTab === 'models' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-              >
-                Models
-              </button>
-            </div>
-          </div>
-
-          {/* Template Selector */}
-          {activeTab === 'templates' && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {PROMPT_TEMPLATES.map(t => (
-                <button
-                  key={t.id}
-                  onClick={() => setSelectedTemplate(t.id)}
-                  className={`p-3 rounded-xl border-2 text-left transition ${selectedTemplate === t.id ? 'border-purple-500 bg-purple-50' : 'border-gray-200 bg-white hover:border-purple-300'}`}
-                >
-                  <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${t.color} flex items-center justify-center text-xl mb-2`}>
-                    {t.icon}
-                  </div>
-                  <p className="text-xs font-bold text-gray-800">{t.name}</p>
-                  <p className="text-xs text-gray-500">{t.description}</p>
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Model Selector */}
-          {activeTab === 'models' && (
-            <div className="grid grid-cols-2 gap-2">
-              {(Object.keys(MODEL_CONFIGS) as AIModel[]).map(model => {
-                const cfg = MODEL_CONFIGS[model];
-                const isSelected = selectedModel === model;
-                return (
-                  <button
-                    key={model}
-                    onClick={() => setSelectedModel(model)}
-                    className={`p-3 rounded-xl border-2 text-left transition ${isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white hover:border-blue-300'}`}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xl">{MODEL_ICON_MAP[model]}</span>
-                      {isSelected && <Check className="w-4 h-4 text-blue-600" />}
-                    </div>
-                    <p className="text-xs font-bold text-gray-800">{cfg.name}</p>
-                    <p className="text-xs text-gray-500">{cfg.provider}</p>
-                    <p className="text-xs font-mono text-green-600 mt-1">${cfg.costPer1kTokens.input}/1k</p>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Advanced Toggle */}
-          <button
-            onClick={() => setShowAdvanced(!showAdvanced)}
-            className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg text-sm font-medium text-gray-700 transition"
-          >
-            <span className="flex items-center gap-2"><Settings className="w-4 h-4" /> Advanced Options</span>
-            {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </button>
-
-          {showAdvanced && (
-            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-medium text-gray-700 block mb-1">Temperature: {promptConfig.temperature}</label>
-                  <input type="range" min="0" max="1" step="0.1" value={promptConfig.temperature}
-                    onChange={e => setPromptConfig(p => ({ ...p, temperature: parseFloat(e.target.value) }))}
-                    className="w-full" />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-700 block mb-1">Max Tokens: {promptConfig.maxTokens}</label>
-                  <input type="range" min="1000" max="8000" step="500" value={promptConfig.maxTokens}
-                    onChange={e => setPromptConfig(p => ({ ...p, maxTokens: parseInt(e.target.value) }))}
-                    className="w-full" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                {[
-                  { key: 'includeCOT', label: 'Chain-of-Thought (CoT)', note: '+20% tokens' },
-                  { key: 'includeExamples', label: 'Few-Shot Examples', note: '+30% tokens' },
-                  { key: 'structured', label: 'Structured JSON Output', note: 'machine-readable' },
-                ].map(({ key, label, note }) => (
-                  <label key={key} className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox"
-                      checked={promptConfig[key as keyof PromptConfig] as boolean}
-                      onChange={e => setPromptConfig(p => ({ ...p, [key]: e.target.checked }))}
-                      className="w-4 h-4 text-blue-600 rounded"
-                    />
-                    <span className="text-xs text-gray-700">{label}</span>
-                    <span className="text-xs text-gray-400">({note})</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Analytics Bar */}
-          <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-4 text-white">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-              <div className="bg-white/10 rounded-lg p-2">
-                <p className="text-xs text-white/70">Model</p>
-                <p className="text-sm font-bold">{MODEL_ICON_MAP[selectedModel]} {MODEL_CONFIGS[selectedModel].name.split(' ')[0]}</p>
-              </div>
-              <div className="bg-white/10 rounded-lg p-2">
-                <p className="text-xs text-white/70">Template</p>
-                <p className="text-sm font-bold">{PROMPT_TEMPLATES.find(t => t.id === selectedTemplate)?.icon} {selectedTemplate}</p>
-              </div>
-              <div className="bg-white/10 rounded-lg p-2">
-                <p className="text-xs text-white/70">Tokens</p>
-                <p className="text-sm font-bold font-mono">{canViewSummary ? metadata.estimatedTokens.toLocaleString() : '—'}</p>
-              </div>
-              <div className="bg-white/10 rounded-lg p-2">
-                <p className="text-xs text-white/70">Est. Cost</p>
-                <p className="text-sm font-bold font-mono text-yellow-300">
-                  {canViewSummary ? `$${metadata.estimatedCost.toFixed(4)}` : '—'}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          {canViewSummary && (
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => handleCopy('prompt', prompt)}
-                className="flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold rounded-xl transition shadow-lg text-sm"
-              >
-                {copied.prompt ? <><Check className="w-4 h-4" /> Copied!</> : <><Copy className="w-4 h-4" /> Copy Prompt</>}
-              </button>
-              <button
-                onClick={() => setShowPreview(!showPreview)}
-                className="flex items-center justify-center gap-2 py-3 bg-gray-700 hover:bg-gray-800 text-white font-bold rounded-xl transition text-sm"
-              >
-                <Code className="w-4 h-4" />
-                {showPreview ? 'Hide' : 'Preview'}
-              </button>
-            </div>
-          )}
-
-          {/* Prompt Preview */}
-          {showPreview && canViewSummary && (
-            <div className="bg-gray-900 text-green-400 rounded-lg p-4 font-mono text-xs overflow-x-auto">
-              <div className="flex justify-between items-center mb-2 text-gray-400">
-                <span className="flex items-center gap-2">
-                  <Code className="w-4 h-4" /> Prompt Preview
-                </span>
-                <button onClick={() => handleCopy('preview', prompt)}>
-                  {copied.preview ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                </button>
-              </div>
-              <pre className="whitespace-pre-wrap break-words max-h-64 overflow-y-auto">{prompt}</pre>
-            </div>
-          )}
-
-          {/* Quick Links */}
-          {canViewSummary && (
-            <div>
-              <p className="text-xs font-semibold text-gray-600 mb-2">🔗 เปิด AI แล้ววางโพรมต์เลย</p>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { href: 'https://chat.openai.com', icon: '🧠', label: 'ChatGPT' },
-                  { href: 'https://claude.ai', icon: '🎯', label: 'Claude' },
-                  { href: 'https://gemini.google.com', icon: '💎', label: 'Gemini' },
-                ].map(({ href, icon, label }) => (
-                  <a key={href} href={href} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 p-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition text-xs font-medium text-gray-700">
-                    <span>{icon}</span>{label}
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </details>
 
       {/* ── Quick Edit ── */}
       {onNavigateToStep && !canViewSummary && !(trip.status === 'completed' || trip.status === 'archived') && (
@@ -996,7 +903,7 @@ useEffect(() => {
       {/* ── Action Buttons ── */}
       {isOwner && !canViewSummary && (
         <button
-          onClick={handleCloseVoting}
+          onClick={() => setShowCloseConfirm(true)}
           disabled={isClosing}
           className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 text-white font-bold rounded-xl shadow-lg transition"
         >
@@ -1013,6 +920,40 @@ useEffect(() => {
       {!isOwner && !canViewSummary && (
         <div className="w-full py-4 bg-gray-100 rounded-xl text-center text-gray-400 text-sm">
           🔒 รอเจ้าของทริปปิดการโหวต หรือรอครบ 7 วัน
+        </div>
+      )}
+
+      {showCloseConfirm && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowCloseConfirm(false)}
+        >
+          <div
+            className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-bold text-gray-900 mb-2">ยืนยันปิดการโหวต?</h3>
+            <p className="text-sm text-gray-600 mb-5">
+              สมาชิกจะไม่สามารถแก้ไขข้อมูลวัน งบประมาณ และสถานที่ได้อีก
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowCloseConfirm(false)}
+                className="flex-1 py-3 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold transition"
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={() => {
+                  setShowCloseConfirm(false);
+                  handleCloseVoting();
+                }}
+                className="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold transition"
+              >
+                ปิดการโหวต
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

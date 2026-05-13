@@ -41,6 +41,7 @@ const Dashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [roomCode, setRoomCode] = useState("");
   const [joiningTrip, setJoiningTrip] = useState(false);
+  const [dialogMessage, setDialogMessage] = useState<string | null>(null);
 
   useEffect(() => {
     loadDashboardStats();
@@ -106,12 +107,12 @@ const Dashboard: React.FC = () => {
     const cleanCode = code.trim().toUpperCase();
     
     if (!cleanCode) {
-      alert("กรุณากรอกรหัสห้อง");
+      setDialogMessage("กรุณากรอกรหัสห้อง");
       return;
     }
 
     if (!validateInviteCode(cleanCode)) {
-      alert("รูปแบบรหัสห้องไม่ถูกต้อง\nกรุณากรอกในรูปแบบ XXXX-XXXX-XXXX-XXXX");
+      setDialogMessage("รูปแบบรหัสห้องไม่ถูกต้อง กรุณากรอกในรูปแบบ XXXX-XXXX-XXXX-XXXX");
       return;
     }
     
@@ -120,15 +121,14 @@ const Dashboard: React.FC = () => {
       const response = await tripAPI.joinTrip(cleanCode);
       
       if (response.success && response.data) {
-        alert('เข้าร่วมทริปสำเร็จ!');
         navigate(`/votepage/${response.data.trip_id}`);
         setRoomCode("");
       } else {
-        alert(response.message || 'ไม่สามารถเข้าร่วมทริปได้');
+        setDialogMessage(response.message || 'ไม่สามารถเข้าร่วมทริปได้');
       }
     } catch (error) {
       console.error('Error joining trip:', error);
-      alert('เกิดข้อผิดพลาดในการเข้าร่วมทริป');
+      setDialogMessage('เกิดข้อผิดพลาดในการเข้าร่วมทริป');
     } finally {
       setJoiningTrip(false);
     }
@@ -427,6 +427,19 @@ const Dashboard: React.FC = () => {
         </div>
 
       </main>
+      {dialogMessage && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-[9999]">
+          <div className="bg-white rounded-xl shadow-lg p-6 w-11/12 max-w-sm text-center">
+            <p className="mb-4 text-blue-900 font-medium">{dialogMessage}</p>
+            <button
+              onClick={() => setDialogMessage(null)}
+              className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              ปิด
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

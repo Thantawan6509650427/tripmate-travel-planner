@@ -4,6 +4,14 @@ import type { AuthRequest   } from "../middleware/validate.js";
 import { randomUUID } from "crypto";
 import jwt from "jsonwebtoken";
 
+const isProduction = process.env.NODE_ENV === "production";
+
+const cookieOptions = {
+  httpOnly: true,
+  secure: isProduction,
+  sameSite: isProduction ? "none" : "lax",
+} as const;
+
 export const googleLogin = async (req: Request, res: Response) => {
   try {
     const { access_token } = req.body;
@@ -18,21 +26,13 @@ export const googleLogin = async (req: Request, res: Response) => {
 
     const result = await googleLoginService(access_token);
 
-    const isProduction = process.env.NODE_ENV === "production";
-
-    // set access token cookie
     res.cookie("accessToken", result.accessToken, {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: "none",
+      ...cookieOptions,
       maxAge: 15 * 60 * 1000
     });
 
-    // set refresh token cookie
     res.cookie("refreshToken", result.refreshToken, {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: "none",
+      ...cookieOptions,
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
@@ -48,7 +48,6 @@ export const googleLogin = async (req: Request, res: Response) => {
       }
     });
 
-    
   } catch (err: any) {
     console.error("Google API error:", err.response?.data || err.message);
     return res.status(401).json({
@@ -59,22 +58,12 @@ export const googleLogin = async (req: Request, res: Response) => {
         detail: err.message
       }
     });
-    
   }
 };
 
-export const logout = (req: Request, res: Response) => {  
-  const isProduction = process.env.NODE_ENV === "production";
-  res.clearCookie("accessToken", {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: "none"
-  });
-  res.clearCookie("refreshToken", {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: "none"
-  });
+export const logout = (req: Request, res: Response) => {
+  res.clearCookie("accessToken", cookieOptions);
+  res.clearCookie("refreshToken", cookieOptions);
   res.status(200).json({
     success: true,
     code: "AUTH_LOGOUT_SUCCESS",
@@ -90,7 +79,6 @@ export const getMe = async (req: AuthRequest, res: Response) => {
 };
 
 export const refreshToken = (req: Request, res: Response) => {
-
   const refreshToken = req.cookies.refreshToken;
 
   if (!refreshToken) {
@@ -101,8 +89,6 @@ export const refreshToken = (req: Request, res: Response) => {
   }
 
   try {
-    const isProduction = process.env.NODE_ENV === "production";
-
     const decoded = jwt.verify(
       refreshToken,
       process.env.REFRESH_SECRET!
@@ -118,9 +104,7 @@ export const refreshToken = (req: Request, res: Response) => {
     );
 
     res.cookie("accessToken", newAccessToken, {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: "none",
+      ...cookieOptions,
       maxAge: 15 * 60 * 1000
     });
 
@@ -129,11 +113,9 @@ export const refreshToken = (req: Request, res: Response) => {
     });
 
   } catch (err) {
-
     return res.status(401).json({
       success: false,
       code: "INVALID_REFRESH_TOKEN"
     });
-
   }
 };
