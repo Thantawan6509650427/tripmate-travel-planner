@@ -139,20 +139,20 @@ function getRegionFromProvince(province: string): string {
 
 // ============== SYSTEM PROMPTS ==============
 
-// ✅ แก้ไข: เพิ่มคำสั่งให้ตอบกลับเป็นภาษาไทยทุก system prompt
+//  แก้ไข: เพิ่มคำสั่งให้ตอบกลับเป็นภาษาไทยทุก system prompt
 const SYSTEM_PROMPTS: Record<string, string> = {
   "gpt-4": `คุณคือผู้เชี่ยวชาญด้านการวางแผนท่องเที่ยวในประเทศไทย มีความรู้เชิงลึกด้านการท่องเที่ยว การจัดสรรงบประมาณ และการจัดการกลุ่ม กรุณาตอบกลับเป็นภาษาไทยทุกครั้ง พร้อมให้คำแนะนำที่ละเอียดและนำไปปฏิบัติได้จริง`,
   "claude-3-opus": `คุณคือผู้เชี่ยวชาญด้านการวางแผนท่องเที่ยวในประเทศไทย เชี่ยวชาญด้านจิตวิทยากลุ่ม งบประมาณ และการสร้างประสบการณ์ที่น่าจดจำ กรุณาตอบกลับเป็นภาษาไทยทุกครั้ง ด้วยความละเอียดรอบคอบและคำนึงถึงความต้องการของกลุ่ม`,
   "gemini-pro": `คุณคือที่ปรึกษาท่องเที่ยวไทยผู้เชี่ยวชาญ เน้นคำแนะนำที่ประหยัดและคุ้มค่าสูงสุดสำหรับกลุ่ม กรุณาตอบกลับเป็นภาษาไทยทุกครั้ง`,
 };
 
-// ✅ แก้ไข: default system prompt เป็นภาษาไทย
+//  แก้ไข: default system prompt เป็นภาษาไทย
 const DEFAULT_SYSTEM_PROMPT =
   "คุณคือผู้เชี่ยวชาญด้านการวางแผนท่องเที่ยวในประเทศไทย กรุณาตอบกลับเป็นภาษาไทยทุกครั้ง พร้อมให้คำแนะนำที่ละเอียดและนำไปปฏิบัติได้จริง";
 
 // ============== PROMPT BUILDERS ==============
 
-// ✅ แก้ไข: สร้าง prompt ใหญ่แบบครบทุกอย่าง พร้อมสั่งให้ตอบเป็นภาษาไทย
+//  แก้ไข: สร้าง prompt ใหญ่แบบครบทุกอย่าง พร้อมสั่งให้ตอบเป็นภาษาไทย
 function buildComprehensivePrompt(data: any, config: PromptConfig): string {
   const { trip, members = [], locationResult, dateResult, budgetResult } = data;
 
@@ -198,7 +198,7 @@ function buildComprehensivePrompt(data: any, config: PromptConfig): string {
       : null,
   };
 
-  // ✅ แก้ไข: header เป็นภาษาไทย + คำสั่งให้ตอบไทย
+  //  แก้ไข: header เป็นภาษาไทย + คำสั่งให้ตอบไทย
   let prompt = `# 🎯 คำขอวางแผนการเดินทาง\n\n`;
   prompt += `⚠️ **กรุณาตอบกลับทั้งหมดเป็นภาษาไทยเท่านั้น**\n\n`;
   prompt += `ฉันกำลังวางแผนทริปกับเพื่อน ต้องการคำแนะนำจากผู้เชี่ยวชาญ\n\n`;
@@ -207,7 +207,7 @@ function buildComprehensivePrompt(data: any, config: PromptConfig): string {
   prompt += `\`\`\`json\n${JSON.stringify(structuredData, null, 2)}\n\`\`\`\n\n`;
 
   if (config.includeCOT) {
-    // ✅ แก้ไข: Analysis framework เป็นภาษาไทย
+    //  แก้ไข: Analysis framework เป็นภาษาไทย
     prompt += `## 🤔 กรอบการวิเคราะห์\n\n`;
     prompt += `กรุณาวิเคราะห์ทริปนี้อย่างเป็นระบบ:\n`;
     prompt += `1. **พลวัตกลุ่ม**: พิจารณาขนาดกลุ่มและความชอบที่น่าจะเป็น\n`;
@@ -216,7 +216,7 @@ function buildComprehensivePrompt(data: any, config: PromptConfig): string {
     prompt += `4. **การจัดการด้านโลจิสติกส์**: วางแผนเส้นทางและตารางเวลาที่มีประสิทธิภาพ\n\n`;
   }
 
-  // ✅ แก้ไข: คำถามหลักเป็นภาษาไทย
+  //  แก้ไข: คำถามหลักเป็นภาษาไทย
   prompt += `## ❓ คำถามหลัก\n\n`;
 
   if (locationResult) {
@@ -235,7 +235,7 @@ function buildComprehensivePrompt(data: any, config: PromptConfig): string {
   prompt += `8. **การลดความเสี่ยง**: ข้อควรระวังด้านสภาพอากาศ ฤดูกาล หรือเคล็ดลับการจอง\n\n`;
 
   if (config.structured) {
-    // ✅ แก้ไข: คำสั่ง JSON output เป็นภาษาไทย (โดย key ยังเป็น English เพื่อ parse ง่าย)
+    //  แก้ไข: คำสั่ง JSON output เป็นภาษาไทย (โดย key ยังเป็น English เพื่อ parse ง่าย)
     prompt += `## 📤 รูปแบบผลลัพธ์ที่ต้องการ\n\n`;
     prompt += `กรุณาตอบกลับในรูปแบบ JSON ที่มีโครงสร้างชัดเจน โดยค่าทั้งหมดให้เป็นภาษาไทย:\n`;
     prompt += `\`\`\`json\n`;
@@ -252,7 +252,7 @@ function buildComprehensivePrompt(data: any, config: PromptConfig): string {
   }
 
   if (config.includeExamples) {
-    // ✅ แก้ไข: ตัวอย่างเป็นภาษาไทย
+    //  แก้ไข: ตัวอย่างเป็นภาษาไทย
     prompt += `## 💡 ตัวอย่างรูปแบบการวิเคราะห์\n\n`;
     prompt += `*ตัวอย่างสำหรับเชียงใหม่ 3 วัน 4 คน งบ ฿5,000 ต่อคน:*\n\n`;
     prompt += `**วันที่ 1: สำรวจเมืองเก่า**\n`;
@@ -269,7 +269,7 @@ function buildComprehensivePrompt(data: any, config: PromptConfig): string {
   return prompt;
 }
 
-// ✅ แก้ไข: สร้าง prompt เน้นตารางทริป เป็นภาษาไทย
+//  แก้ไข: สร้าง prompt เน้นตารางทริป เป็นภาษาไทย
 function buildItineraryPrompt(data: any, config: PromptConfig): string {
   const { trip, members = [], locationResult, dateResult } = data;
 
@@ -310,7 +310,7 @@ function buildItineraryPrompt(data: any, config: PromptConfig): string {
   return prompt;
 }
 
-// ✅ แก้ไข: วิเคราะห์งบ เป็นภาษาไทย
+//  แก้ไข: วิเคราะห์งบ เป็นภาษาไทย
 function buildBudgetPrompt(data: any, config: PromptConfig): string {
   const { trip, members = [], budgetResult, locationResult } = data;
 
@@ -359,7 +359,7 @@ function buildBudgetPrompt(data: any, config: PromptConfig): string {
   return prompt;
 }
 
-// ✅ แก้ไข: แนะนำกิจกรรม เป็นภาษาไทย
+//  แก้ไข: แนะนำกิจกรรม เป็นภาษาไทย
 function buildActivitiesPrompt(data: any, config: PromptConfig): string {
   const { trip, members = [], locationResult, budgetResult } = data;
 
@@ -396,7 +396,7 @@ function buildActivitiesPrompt(data: any, config: PromptConfig): string {
   return prompt;
 }
 
-// ✅ แก้ไข: แนะนำที่พัก เป็นภาษาไทย
+//  แก้ไข: แนะนำที่พัก เป็นภาษาไทย
 function buildAccommodationPrompt(data: any, config: PromptConfig): string {
   const { trip, members = [], locationResult, budgetResult, dateResult } = data;
 
@@ -584,7 +584,7 @@ export class PromptService {
       { text: DEFAULT_SYSTEM_PROMPT + "\n\n" + prompt }
     ]);
 
-    console.log("✅ Gemini responded");
+    console.log(" Gemini responded");
 
     for await (const chunk of result.stream) {
       const text = chunk.text();

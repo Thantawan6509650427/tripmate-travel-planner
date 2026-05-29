@@ -53,7 +53,7 @@ const VotePage: React.FC = () => {
   const [dialogMessage, setDialogMessage] = useState<string | null>(null);
   const [dialogClosePath, setDialogClosePath] = useState<string | null>(null);
 
-  // ✅ Pending Requests state
+  //  Pending Requests state
   const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
   const [showPendingPanel, setShowPendingPanel] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -106,9 +106,9 @@ const VotePage: React.FC = () => {
         setInviteCode(tripData.invitecode);
         setTrip(tripData);
 
-        // ✅ โหลด pending requests ถ้าเป็น Owner
+        //  โหลด pending requests ถ้าเป็น Owner
         if (tripData.ownerid === user?.user_id) {
-          console.log('✅ เป็น Owner โหลด members'); 
+          console.log(' เป็น Owner โหลด members'); 
           try {
             const pendingRes = await tripAPI.getPendingRequests(tripData.tripid);
             console.log('pending requests response:', JSON.stringify(pendingRes));
@@ -386,7 +386,7 @@ const reloadTripData = async (tripId?: string) => {
     logout();
   };
 
-  // ✅ Approve Request
+  //  Approve Request
   const handleApprove = async (userId: string) => {
     if (!trip) return;
     try {
@@ -403,7 +403,7 @@ const reloadTripData = async (tripId?: string) => {
     }
   };
 
-  // ✅ Reject Request
+  //  Reject Request
   const handleReject = async (userId: string) => {
     if (!trip) return;
     try {
@@ -420,12 +420,12 @@ const reloadTripData = async (tripId?: string) => {
     }
   };
 
-  // ✅ Approve All
+  //  Approve All
   const handleApproveAll = async () => {
     if (!trip) return;
     const toApprove = [...pendingRequests];
     
-    // ✅ clear ทันทีก่อน call API เพื่อป้องกัน double trigger
+    //  clear ทันทีก่อน call API เพื่อป้องกัน double trigger
     setPendingRequests([]);
     
     for (const req of toApprove) {
@@ -438,12 +438,12 @@ const reloadTripData = async (tripId?: string) => {
     }
   };
 
-  // ✅ Reject All
+  //  Reject All
   const handleRejectAll = async () => {
     if (!trip) return;
     const toReject = [...pendingRequests];
     
-    // ✅ clear ทันทีก่อน call API
+    //  clear ทันทีก่อน call API
     setPendingRequests([]);
     
     for (const req of toReject) {
@@ -471,7 +471,7 @@ const reloadTripData = async (tripId?: string) => {
     }
   };
 
-  // ✅ Save Dates — blocked when trip is closed
+  //  Save Dates — blocked when trip is closed
   const handleSaveDates = async (dates: string[]) => {
     if (isClosed) return;
     if (!trip) {
@@ -489,7 +489,7 @@ const reloadTripData = async (tripId?: string) => {
         ranges: dates.sort(),
       });
       if (response.success) {
-        console.log('✅ บันทึกวันที่สำเร็จ');
+        console.log(' บันทึกวันที่สำเร็จ');
         setUserDates(dates);
         setStepCompleted(prev => ({ ...prev, 2: true }));
         const dateRes = await voteAPI.getDateMatchingResult(trip.tripid);
@@ -508,7 +508,7 @@ const reloadTripData = async (tripId?: string) => {
     }
   };
 
-  // ✅ Save Budget — blocked when trip is closed
+  //  Save Budget — blocked when trip is closed
   const handleSaveBudget = async (category: string, amount: number) => {
     if (isClosed) return;
     if (!trip) return;
@@ -535,7 +535,7 @@ const reloadTripData = async (tripId?: string) => {
     }
   };
 
-  // ✅ Vote Location — blocked when trip is closed
+  //  Vote Location — blocked when trip is closed
   const handleVoteLocation = async (votes: LocationVote[]) => {
     if (isClosed) return;
     if (!trip) return;
@@ -551,7 +551,6 @@ const reloadTripData = async (tripId?: string) => {
         setUserLocations(updatedLocations);
         const locRes = await voteAPI.getLocationVote(trip.tripid);
         console.log("location response:",locRes)
-       //
       if (locRes?.data?.actualVote !== undefined) {
         setLocationVotedCount(locRes.data.actualVote);
       }
@@ -679,7 +678,7 @@ const reloadTripData = async (tripId?: string) => {
               <Copy className="w-4 h-4" />
             </button>
 
-            {/* ✅ ปุ่มคำขอเข้าร่วม - เฉพาะ Owner */}
+            {/*  ปุ่มคำขอเข้าร่วม - เฉพาะ Owner */}
             {isOwner && (
               <button
                 onClick={() => setShowPendingPanel(true)}
@@ -708,7 +707,7 @@ const reloadTripData = async (tripId?: string) => {
             <p className="text-sm text-gray-500 mt-1">
               {trip.numdays ? `${trip.numdays} วัน` : ''} 
               {trip.members && ` · สมาชิก ${trip.members.length} คน`}
-              {trip.status === 'completed' || trip.status === 'archived' || trip.status === 'confirmed' ? '✅ ทริปเสร็จสิ้น' : '🗳️ กำลังโหวต'}
+              {trip.status === 'completed' || trip.status === 'archived' || trip.status === 'confirmed' ? ' ทริปเสร็จสิ้น' : '🗳️ กำลังโหวต'}
             </p>
             <p className="text-sm text-gray-400 mt-1">
               {trip.description || 'ไม่มีคำอธิบายเพิ่มเติม'}
@@ -718,7 +717,7 @@ const reloadTripData = async (tripId?: string) => {
               {trip.createdat && ` · ${new Date(trip.createdat).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })}`}
             </p> */}
 
-            {/* ✅ Closed trip banner */}
+            {/*  Closed trip banner */}
             {isClosed && (
               <div className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-gray-100 border border-gray-300 rounded-full text-sm text-gray-600 font-medium">
                 🔒 ทริปนี้ปิดแล้ว — ไม่สามารถแก้ไขข้อมูลได้
@@ -847,7 +846,7 @@ const reloadTripData = async (tripId?: string) => {
         )}
       </main>
 
-      {/* ✅ Pending Requests Panel (Notification-style ด้านล่างขวา) */}
+      {/*  Pending Requests Panel (Notification-style ด้านล่างขวา) */}
       {showPendingPanel && isOwner && (
       <div className="fixed inset-0 z-40" onClick={() => setShowPendingPanel(false)}>
         <div
@@ -973,7 +972,7 @@ const reloadTripData = async (tripId?: string) => {
       </div>
     )}
 
-      {/* ✅ Notification badge (fixed bottom-right เมื่อปิด panel) */}
+      {/*  Notification badge (fixed bottom-right เมื่อปิด panel) */}
       {!showPendingPanel && isOwner && pendingRequests.length > 0 && (
         <button
           onClick={() => setShowPendingPanel(true)}
@@ -986,7 +985,7 @@ const reloadTripData = async (tripId?: string) => {
           </span>
         </button>
       )}
-      {/* ✅ Join Result Dialog */}
+      {/*  Join Result Dialog */}
       {dialogMessage && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-[9999]">
           <div className="bg-white rounded-xl shadow-lg p-6 w-11/12 max-w-sm text-center">

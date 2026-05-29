@@ -102,7 +102,7 @@ export const StepPlace: React.FC<StepPlaceProps> = ({
           setAnalysisResult(null);
         }
 
-        // ✅ เช็คจาก rows ของ user (votes ที่ user นี้โหวต)
+        //  เช็คจาก rows ของ user (votes ที่ user นี้โหวต)
         const userVotes = votingData.rows as any[];
         if (userVotes && userVotes.length > 0) {
           setHasSaved(true);
@@ -348,14 +348,14 @@ export const StepPlace: React.FC<StepPlaceProps> = ({
                     </div>
                     <p className="text-xs text-blue-700">
                       {votedCount >= (trip.members?.length || 0)
-                      ? '✅ ทุกคนโหวตแล้ว'
+                      ? ' ทุกคนโหวตแล้ว'
                       : '⏳ รอสมาชิกคนอื่นโหวต'}
                     </p>
                   </div>
                 );
               })()}
 
-              {/* ✅ มีผลวิเคราะห์ */}
+              {/*  มีผลวิเคราะห์ */}
               {analysisResult ? (
                 <>
                   {analysisResult.hasWinner && analysisResult.topProvinces && (
@@ -395,7 +395,7 @@ export const StepPlace: React.FC<StepPlaceProps> = ({
                   )}
                 </>
               ) : (
-                // ✅ ยังไม่มีผลวิเคราะห์ (คนโหวตคนแรก)
+                //  ยังไม่มีผลวิเคราะห์ (คนโหวตคนแรก)
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                   <p className="text-gray-500 text-sm text-center">
                     💭 บันทึกเรียบร้อยแล้ว รอสมาชิกคนอื่นโหวตเพื่อดูผลเปรียบเทียบ

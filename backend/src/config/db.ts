@@ -32,7 +32,7 @@ export const pool = mysql.createPool(dbConfig);
 // ทดสอบการเชื่อมต่อ
 pool.getConnection()
   .then((connection) => {
-    console.log('✅ Successfully connected to TiDB Cloud!');
+    console.log(' Successfully connected to TiDB Cloud!');
     connection.release();
   })
   .catch((err) => {

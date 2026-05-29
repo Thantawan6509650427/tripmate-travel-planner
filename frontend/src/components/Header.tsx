@@ -7,9 +7,7 @@ import { formatRelativeTime } from "../utils";
 import { notiApi } from "../services/tripService";
 import { getSocket } from "../socket";
 
-// ============================================================================
 // TYPES
-// ============================================================================
 
 interface HeaderProps {
   onLogout?: () => void;
@@ -37,9 +35,7 @@ interface Notification {
   subText?: string;
 }
 
-// ============================================================================
 // COMPONENT
-// ============================================================================
 
 const Header: React.FC<HeaderProps> = ({ onLogout }) => {
   const navigate = useNavigate();
@@ -140,7 +136,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout }) => {
           showToast(latest.text, latest.type);
         }
 
-        // ✅ ถ้ามี noti trip_confirmed/archived/completed และอยู่ใน votepage ของทริปนั้น
+        //  ถ้ามี noti trip_confirmed/archived/completed และอยู่ใน votepage ของทริปนั้น
         const closedNoti = mapped.find((n: any) =>
           ["trip_confirmed", "voting_closed", "trip_archived"].includes(n.type) &&
           n.tripId &&
@@ -571,7 +567,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout }) => {
         </div>
       )}
 
-      {/* ✅ Toast Notification */}
+      {/*  Toast Notification */}
       {toast && (
         <div className={`fixed top-20 right-4 z-[9999] max-w-sm bg-white border rounded-xl shadow-2xl px-4 py-3 flex items-start gap-3 animate-in slide-in-from-right duration-300 ${
           toast.type === "error" ? "border-red-200" : "border-gray-200"

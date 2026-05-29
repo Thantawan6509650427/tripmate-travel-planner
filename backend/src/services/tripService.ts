@@ -609,8 +609,6 @@ export const closeTripService = async (tripId: string, type: string, user_id?: s
     //   return {
     //     success: true,
     //     message: "ทริปถูกปิดอัตโนมัติเนื่องจากสมาชิกโหวตครบทุกคนแล้ว"
-    //   };
-    // }
 
   }
 

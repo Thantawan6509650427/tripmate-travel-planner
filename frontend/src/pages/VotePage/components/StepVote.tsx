@@ -130,7 +130,7 @@ export const StepVote: React.FC<StepVoteProps> = ({ trip, matchingData, initialD
   const renderAnalysisModal = () => {
     if (!showAnalysisModal || !matchingInfo) return null;
 
-    // ✅ ใช้ recommendation จาก Backend
+    //  ใช้ recommendation จาก Backend
     const { recommendation, availability, summary } = matchingInfo;
 
     return (
@@ -496,7 +496,7 @@ export const StepVote: React.FC<StepVoteProps> = ({ trip, matchingData, initialD
                 </div>
                 <p className="text-xs text-blue-700">
                   {(matchingInfo.summary?.actualVote || 0) >= (matchingInfo.summary?.totalMembers || 1)
-                    ? '✅ ทุกคนเลือกวันแล้ว'
+                    ? ' ทุกคนเลือกวันแล้ว'
                     : '⏳ รอสมาชิกคนอื่นเลือกวัน'}
                 </p>
               </div>

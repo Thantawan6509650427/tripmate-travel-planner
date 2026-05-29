@@ -1,11 +1,7 @@
-// ============================================================================
 // frontend/src/utils/index.ts
-// ✅ รวม utils ทั้งหมด - ตรงกับ Backend APIs
-// ============================================================================
+//  รวม utils ทั้งหมด - ตรงกับ Backend APIs
 
-// ============================================================================
 // VALIDATION FUNCTIONS
-// ============================================================================
 
 /**
  * ตรวจสอบรหัสทริป (Hex Format: XXXX-XXXX-XXXX-XXXX)
@@ -61,16 +57,14 @@ export const validateDays = (days: number): { valid: boolean; error?: string } =
 };
 
 /**
- * ✅ ตรวจสอบ category (ตรงกับ Backend)
+ *  ตรวจสอบ category (ตรงกับ Backend)
  */
 export const validateBudgetCategory = (category: string): boolean => {
   const validCategories = ['accommodation', 'transport', 'food', 'other'];
   return validCategories.includes(category);
 };
 
-// ============================================================================
 // FORMATTING FUNCTIONS
-// ============================================================================
 
 /**
  * Format Invite Code (Hex: 0-9, A-F)
@@ -153,15 +147,13 @@ export const formatRelativeTime = (timestamp: number): string => {
 };
 
 /**
- * ✅ Format Date Range สำหรับ API (YYYY-MM-DD)
+ *  Format Date Range สำหรับ API (YYYY-MM-DD)
  */
 export const formatDateForAPI = (date: Date): string => {
   return date.toISOString().split('T')[0];
 };
 
-// ============================================================================
 // SAFE LOCALSTORAGE (ป้องกัน QuotaExceededError)
-// ============================================================================
 
 /**
  * บันทึกข้อมูลลง localStorage แบบปลอดภัย
@@ -232,12 +224,10 @@ export const getFromStorage = <T>(key: string, defaultValue: T): T => {
   }
 };
 
-// ============================================================================
 // HELPER FUNCTIONS (ลบฟังก์ชันที่ไม่มี Backend API รองรับ)
-// ============================================================================
 
 /**
- * ✅ คำนวณงบประมาณเฉลี่ย (ใช้ฝั่ง Frontend เท่านั้น)
+ *  คำนวณงบประมาณเฉลี่ย (ใช้ฝั่ง Frontend เท่านั้น)
  */
 export const calculateAverageBudget = (
   budgets: Array<{
@@ -277,7 +267,7 @@ export const calculateAverageBudget = (
 };
 
 /**
- * ✅ นับจำนวนคนที่กรอกงบแล้ว
+ *  นับจำนวนคนที่กรอกงบแล้ว
  */
 export const countFilledBudgets = (
   budgets: Array<{
@@ -297,9 +287,7 @@ export const countFilledBudgets = (
   return { filled, total, percentage };
 };
 
-// ============================================================================
 // TYPE GUARDS
-// ============================================================================
 
 /**
  * ตรวจสอบว่าเป็น Error object หรือไม่
@@ -317,9 +305,7 @@ export const isSuccessResponse = <T>(
   return response && response.success === true && response.data !== undefined;
 };
 
-// ============================================================================
 // EXPORTS
-// ============================================================================
 
 export default {
   // Validation

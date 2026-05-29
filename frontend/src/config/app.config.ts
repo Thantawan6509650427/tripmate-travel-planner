@@ -1,7 +1,5 @@
-// ============================================================================
 // config/app.config.ts
 // Application Configuration & Logging
-// ============================================================================
 
 /**
  * ตั้งค่าแอปพลิเคชัน
@@ -29,7 +27,7 @@ export const log = {
   },
   success: (message: string, data?: any) => { 
     if (!CONFIG.ENABLE_CONSOLE_LOGS) return;
-    console.log(`✅ [SUCCESS] ${message}`, data || ''); 
+    console.log(` [SUCCESS] ${message}`, data || ''); 
   },
   error: (message: string, data?: any) => { 
     console.error(`❌ [ERROR] ${message}`, data || ''); 

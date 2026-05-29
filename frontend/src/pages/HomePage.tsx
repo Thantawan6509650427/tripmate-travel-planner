@@ -37,7 +37,7 @@ const HomePage: React.FC = () => {
   const [tripToDelete, setTripToDelete] = useState<TripCard | null>(null);
   const [joiningTrip, setJoiningTrip] = useState(false);
   
-  // ✅ Helper: แปลง TripSummary → TripCard
+  //  Helper: แปลง TripSummary → TripCard
   const formatTripSummary = (trip: TripSummary): TripCard => {
     console.log('Trip status:', trip.trip_id, trip.status);
     const isCompleted = trip.status === 'completed' || trip.status === 'archived'|| trip.status === 'confirmed';
@@ -159,7 +159,7 @@ const HomePage: React.FC = () => {
       setMyTrips(owned.map(formatTripSummary));
       setInvitedTrips(joined.map(formatTripSummary));
 
-      console.log('✅ Loaded trips:', { owned: owned.length, joined: joined.length });
+      console.log(' Loaded trips:', { owned: owned.length, joined: joined.length });
 
     } catch (error) {
       console.error("Load trips failed:", error);
@@ -189,7 +189,7 @@ const HomePage: React.FC = () => {
     }
   };
 
-  // ✅ เข้าร่วมทริป
+  //  เข้าร่วมทริป
   const handleJoinTrip = async (code: string) => {
     const cleanCode = code.trim().toUpperCase();
     if (!cleanCode) { setDialogMessage("กรุณากรอกรหัสห้อง"); return; }
@@ -216,7 +216,7 @@ const HomePage: React.FC = () => {
   }
   };
 
-  // ✅ สร้างทริป
+  //  สร้างทริป
   const handleCreateTrip = async () => {
     const nameValidation = validateTripName(newTrip.name);
     if (!nameValidation.valid) {
@@ -253,7 +253,7 @@ const HomePage: React.FC = () => {
     }
   };
   
-  // ✅ Logout
+  //  Logout
   const handleLogout = () => {
     logout();
   };
@@ -505,7 +505,7 @@ const HomePage: React.FC = () => {
           </div>
         </div>
       )}
-      {/* ✅ Join Result Dialog */}
+      {/*  Join Result Dialog */}
       {dialogMessage && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-[9999]">
           <div className="bg-white rounded-xl shadow-lg p-6 w-11/12 max-w-sm text-center">

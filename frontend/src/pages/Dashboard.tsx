@@ -249,9 +249,9 @@ const Dashboard: React.FC = () => {
         {/* Section ทริป */}
         <div className="flex flex-col md:flex-row gap-6 h-[600px] overflow-y-auto">
           
-          {/* ════════════════════════════════════════════════════ */}
+          {}
           {/* Section 1: ทริปที่ฉันสร้าง */}
-          {/* ════════════════════════════════════════════════════ */}
+          {}
           <div className="flex-1">
             <h2 className="text-2xl font-bold text-blue-900 mb-3">สร้างโดยฉัน</h2>
             
@@ -338,9 +338,9 @@ const Dashboard: React.FC = () => {
             )}
           </div>
 
-          {/* ════════════════════════════════════════════════════ */}
+          {}
           {/* Section 2: ทริปที่ถูกเชิญเข้าร่วม */}
-          {/* ════════════════════════════════════════════════════ */}
+          {}
           <div className="flex-1">
             <h2 className="text-2xl font-bold text-blue-900 mb-3">ถูกเชิญเข้าร่วม</h2>
             

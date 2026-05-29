@@ -16,7 +16,7 @@ function LoginPage() {
 
   console.log("Redirect param:", redirectPath);
 
-  // ✅ ใช้ useAuth hook แทนการ call API โดยตรง
+  //  ใช้ useAuth hook แทนการ call API โดยตรง
   const handleGoogleLogin = useGoogleLogin({
   flow: 'implicit',
   onSuccess: async (tokenResponse) => {
@@ -27,10 +27,10 @@ function LoginPage() {
       console.log('🔐 Attempting Google login...');
       console.log("Redirect param:", redirectPath);
 
-      // ✅ เรียก login จาก AuthContext
+      //  เรียก login จาก AuthContext
       await login(tokenResponse.access_token, redirectPath);
 
-      console.log('✅ Login successful');
+      console.log(' Login successful');
 
     } catch (err: any) {
       console.error('❌ Login failed:', err);

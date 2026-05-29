@@ -269,14 +269,11 @@ export const updateBudget = async (trip_id: string, user_id: string, category: s
 
     // 1. create budget_votings (ถ้ายังไม่มี)
     // await connection.query(
-    //   `
     //   INSERT INTO budget_votings (budget_voting_id, trip_id, status)
     //   VALUES (UUID(), ?, 'active')
     //   ON DUPLICATE KEY UPDATE 
     //     budget_voting_id = budget_voting_id
-    //   `,
     //   [trip_id]
-    // );
 
     // 2. get budget_voting_id
     // const [votingRows]: any = await connection.query(
@@ -285,7 +282,6 @@ export const updateBudget = async (trip_id: string, user_id: string, category: s
     //   FROM budget_votings 
     //   WHERE trip_id = ?`,
     //   [trip_id]
-    // );
     // const budget_voting_id = votingRows[0].budget_voting_id;
 
     // 1+2. get or create budget_voting_id
@@ -368,7 +364,7 @@ export const clearBudgetCategory = async (tripid: string, user_id: string, categ
       [tripid, user_id, category]
     );
 
-    // ✅ ลบ budget_options ด้วย (parent)
+    //  ลบ budget_options ด้วย (parent)
     await connection.query(
       `DELETE bo FROM budget_options bo
         JOIN budget_votings bvt ON bo.budget_voting_id = bvt.budget_voting_id
@@ -464,7 +460,6 @@ export const submitLocationVotes = async (trip_id: string,user_id: string,votes:
       //   (location_option_id, location_voting_id, province_name, proposed_by, score)
       //   VALUES (UUID(), ?, ?, ?, ?)`,
       // [voting_id, province, user_id, score]
-      // );
     }
 
     await connection.commit();

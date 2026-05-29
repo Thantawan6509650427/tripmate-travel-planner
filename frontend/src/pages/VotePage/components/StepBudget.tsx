@@ -49,7 +49,7 @@ const BUDGET_CATEGORIES = [
   { key: 'other'         as const, label: 'เงินสำรอง',  color: '#f59e0b', required: false, requiresOvernight: false }
 ] as const;
 
-// ✅ Validation Constants
+//  Validation Constants
 const MAX_BUDGET = 10_000_000; // 10 ล้านบาท
 const MIN_BUDGET = 0;
 
@@ -73,17 +73,17 @@ export const StepBudget: React.FC<StepBudgetProps> = ({ trip, budgetInfo, onSave
     totalMembers: number;
   } | null>(null);
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
-  // ✅ เปลี่ยนจาก justSaved เป็น hasSaved + isAnalysisOpen เหมือน StepVote
+  //  เปลี่ยนจาก justSaved เป็น hasSaved + isAnalysisOpen เหมือน StepVote
   const [hasSaved, setHasSaved] = useState(false);
   const [isAnalysisOpen, setIsAnalysisOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const budgetRef = useRef(budget);
   useEffect(() => { budgetRef.current = budget; }, [budget]);
 
-  // ✅ useRef สำหรับจัดการ timeout
+  //  useRef สำหรับจัดการ timeout
   const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // ✅ Cleanup timeout เมื่อ unmount
+  //  Cleanup timeout เมื่อ unmount
   useEffect(() => {
     return () => {
       if (toastTimeoutRef.current) {
@@ -171,7 +171,7 @@ export const StepBudget: React.FC<StepBudgetProps> = ({ trip, budgetInfo, onSave
       setIsAnalysisOpen(true);
     }
 
-    // 3. statsMap ใช้ loadedBudget ที่มีค่าแล้ว ✅
+    // 3. statsMap ใช้ loadedBudget ที่มีค่าแล้ว 
     if (budgetInfo.stats) {
       const statsMap: BudgetStatsMap = {
         accommodation: {
@@ -228,7 +228,7 @@ export const StepBudget: React.FC<StepBudgetProps> = ({ trip, budgetInfo, onSave
     setError(null);
     try {
       await onSave(category, amount);
-      console.log(`✅ บันทึก ${category} สำเร็จ: ฿${amount}`);
+      console.log(` บันทึก ${category} สำเร็จ: ฿${amount}`);
       setHasSaved(true);
       setIsAnalysisOpen(true);
     } catch (error) {
@@ -370,7 +370,7 @@ export const StepBudget: React.FC<StepBudgetProps> = ({ trip, budgetInfo, onSave
               </div>
               <p className="text-xs text-blue-700 mt-2">
                 {hasRealStats
-                  ? '✅ มีข้อมูลเปรียบเทียบจากสมาชิกหลายคนแล้ว'
+                  ? ' มีข้อมูลเปรียบเทียบจากสมาชิกหลายคนแล้ว'
                   : '⏳ รอสมาชิกคนอื่นกรอกเพื่อเปรียบเทียบ'
                 }
               </p>
@@ -684,7 +684,7 @@ export const StepBudget: React.FC<StepBudgetProps> = ({ trip, budgetInfo, onSave
           )}
         </button>
 
-        {/* ✅ ผลการวิเคราะห์ inline (เหมือน StepVote) — แสดงหลังบันทึก */}
+        {/*  ผลการวิเคราะห์ inline (เหมือน StepVote) — แสดงหลังบันทึก */}
         {hasSaved && (
           <div className="bg-white rounded-xl shadow-lg overflow-hidden">
 
@@ -725,7 +725,7 @@ export const StepBudget: React.FC<StepBudgetProps> = ({ trip, budgetInfo, onSave
                       </span>
                     </div>
                     <p className="text-xs text-blue-700">
-                      {hasRealStats ? '✅ มีข้อมูลเปรียบเทียบจากสมาชิกหลายคนแล้ว' : '⏳ รอสมาชิกคนอื่นกรอกเพื่อเปรียบเทียบ'}
+                      {hasRealStats ? ' มีข้อมูลเปรียบเทียบจากสมาชิกหลายคนแล้ว' : '⏳ รอสมาชิกคนอื่นกรอกเพื่อเปรียบเทียบ'}
                     </p>
                   </div>
 

@@ -61,7 +61,7 @@ export const joinRequestTemplate = (ownerName: string,requesterName: string) => 
 
 export const joinApprovedTemplate = (name: string, tripName: string) => {
   return baseTemplate(`
-    <h2 style="color:#4CAF50;">✅ Request Approved</h2>
+    <h2 style="color:#4CAF50;"> Request Approved</h2>
 
     <p>Hello ${name},</p>
 

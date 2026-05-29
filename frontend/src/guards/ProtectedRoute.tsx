@@ -1,5 +1,5 @@
 // frontend/src/guards/ProtectedRoute.tsx
-// ✅ Protected Route Guard สำหรับ routes ที่ต้อง login
+//  Protected Route Guard สำหรับ routes ที่ต้อง login
 
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
@@ -20,7 +20,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const { isAuthenticated, isLoading, user } = useAuth();
   const location = useLocation();
 
-  // ✅ แสดง Loading ขณะตรวจสอบ auth
+  //  แสดง Loading ขณะตรวจสอบ auth
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
@@ -32,13 +32,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
 
-  // ✅ ถ้ายังไม่ได้ login → redirect ไป login page
+  //  ถ้ายังไม่ได้ login → redirect ไป login page
   if (!isAuthenticated) {
     console.warn('⚠️ Not authenticated, redirecting to login');
     return <Navigate to="/" state={{ from: location }} replace />;
   }
 
-  // ✅ ถ้าต้องการ owner permission
+  //  ถ้าต้องการ owner permission
   if (requireOwner && ownerId && user) {
     if (user.user_id !== ownerId) {
       console.warn('⚠️ Not owner, access denied');
@@ -68,7 +68,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     }
   }
 
-  // ✅ ผ่านการตรวจสอบ → แสดง children
+  //  ผ่านการตรวจสอบ → แสดง children
   return <>{children}</>;
 };
 

@@ -22,7 +22,7 @@ export const apiFetch = async (url: string, options: RequestInit = {}) => {
 
     if (refresh.ok) {
 
-      console.log("✅ Token refreshed");
+      console.log(" Token refreshed");
 
       response = await fetch(`${API_URL}${endpoint}`, {
         ...options,

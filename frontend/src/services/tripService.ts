@@ -1,7 +1,5 @@
-// ============================================================================
 // frontend/src/services/tripService.ts
-// ✅ รองรับทั้ง Mock Data และ API จริง - จัดเรียงตาม Step
-// ============================================================================
+//  รองรับทั้ง Mock Data และ API จริง - จัดเรียงตาม Step
 
 import { CONFIG } from '../config/app.config';
 import type {
@@ -48,16 +46,12 @@ import {
 
 import { apiFetch } from "./apiClient";
 
-// ============================================================================
 // CONFIGURATION
-// ============================================================================
 
 const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 const API_TIMEOUT = 10000;
 
-// ============================================================================
 // HELPER FUNCTIONS
-// ============================================================================
 /*
 const fetchWithTimeout = async (
   url: string,
@@ -113,9 +107,7 @@ const handleApiError = (error: any): ApiResponse => {
   };
 };
 
-// ============================================================================
 // TRIP APIs
-// ============================================================================
 
 export const tripAPI = {
   /**
@@ -365,7 +357,7 @@ export const tripAPI = {
       const data = await response.json();
       console.log('request-join response:', response.status, data); 
 
-      // ✅ เช็คก่อนว่าเป็น JSON จริงไหม
+      //  เช็คก่อนว่าเป็น JSON จริงไหม
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
         return {
@@ -452,15 +444,11 @@ export const tripAPI = {
 };
 
 
-// ============================================================================
 // VOTE APIs - จัดเรียงตาม Step
-// ============================================================================
 
 export const voteAPI = {
   
-  // ============================================================================
   // STEP 1: VOTE (Date Availability & Voting)
-  // ============================================================================
   
   /**
    * GET /api/votes/:tripId/date-matching-result
@@ -545,9 +533,7 @@ export const voteAPI = {
     }
   },
 
-  // ============================================================================
   // STEP 2: BUDGET (Budget Voting)
-  // ============================================================================
 
   /**
    * GET /api/votes/:tripId/get-budget
@@ -601,9 +587,7 @@ export const voteAPI = {
 },
 
 
-  // ============================================================================
   // STEP 3: PLACE (Location Voting)
-  // ============================================================================
 
   /**
    * GET /api/votes/:tripId/get-vote-place
@@ -682,9 +666,7 @@ export const voteAPI = {
 },
 
 
-  // ============================================================================
   // STEP 4: SUMMARY (Trip Close & Summary)
-  // ============================================================================
 
   manualClose: async (tripId: string): Promise<ApiResponse> => {
     if (CONFIG.USE_MOCK_DATA) {
@@ -709,9 +691,7 @@ export const voteAPI = {
 
   };
   
-// ============================================================================
 // EXPORTS
-// ============================================================================
 
 export const notiApi = {
   getNoti: async () => {

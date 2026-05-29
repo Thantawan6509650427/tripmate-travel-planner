@@ -1,5 +1,5 @@
 // frontend/src/contexts/AuthContext.tsx
-// ✅ Authentication Context สำหรับจัดการ User State ทั้งระบบ
+//  Authentication Context สำหรับจัดการ User State ทั้งระบบ
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -64,7 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           isLoading: false
         }); 
         
-        console.log('✅ Mock auth initialized');
+        console.log(' Mock auth initialized');
 
         /* 
         // โค้ดเดิม - comment ไว้ก่อน
@@ -128,7 +128,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 }, [authState.user?.user_id]);
 
-  // ✅ Login with Google
+  //  Login with Google
   const login = async (accessToken: string,redirectPath?: string): Promise<void> => {
     const response = await apiFetch(`/auth/google`, {
       method: "POST",
@@ -156,7 +156,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isLoading: false
   });
 
-  console.log("✅ Login successful:", result.data.user.email);
+  console.log(" Login successful:", result.data.user.email);
 
   navigate(redirectPath || "/homepage");
   };
@@ -183,7 +183,7 @@ const logout = async (): Promise<void> => {
   navigate("/");
 };
 
-  // ✅ Update user data
+  //  Update user data
   const updateUser = useCallback((userData: Partial<User>) => {
     setAuthState(prev => ({
       ...prev,

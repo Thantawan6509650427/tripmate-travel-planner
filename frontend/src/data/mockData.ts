@@ -22,7 +22,7 @@ export const MOCK_TRIP_STATUS: Record<string, string> = {
 export const MOCK_CURRENT_USER_ID = 'user-001';
 export const MOCK_CURRENT_USER_EMAIL = 'user@example.com';
 
-// ✅ Mock Trips (ตรงกับ Backend)
+//  Mock Trips (ตรงกับ Backend)
 export const MOCK_TRIPS: Trip[] = [
   {
     trip_id: 'trip-001',
@@ -305,9 +305,7 @@ export const getMockTripSummary = (tripId: string): ApiResponse => {
   };
 };
 
-// ============================================================================
 // VOTE APIs MOCK
-// ============================================================================
 
 /**
  * POST /api/votes/availability
@@ -549,7 +547,7 @@ export const getMockGetBudgetVoting = (tripCode: string): ApiResponse => {
     code: 'BUDGET_VOTING_LOADED',
     message: 'Budget voting data loaded',
     data: {
-      // ✅ 1. งบของ User ปัจจุบัน (rows)
+      //  1. งบของ User ปัจจุบัน (rows)
       rows: tripCode === 'trip-003' ? [] : [
         { user_id: 'user-001', category_name: 'accommodation', estimated_amount: 5000, voted_at: new Date(Date.now() - 3600000).toISOString() },
         { user_id: 'user-001', category_name: 'transport', estimated_amount: 3000, voted_at: new Date(Date.now() - 3600000).toISOString() },
@@ -557,7 +555,7 @@ export const getMockGetBudgetVoting = (tripCode: string): ApiResponse => {
         { user_id: 'user-001', category_name: 'other', estimated_amount: 1000, voted_at: new Date(Date.now() - 3600000).toISOString() }
       ],
 
-      // ✅ 2. สถิติจากทุกคน (stats)
+      //  2. สถิติจากทุกคน (stats)
       stats: {
         accommodation: {
           q1: 4000,      // Q1 (25th percentile)
@@ -605,14 +603,14 @@ export const getMockGetBudgetVoting = (tripCode: string): ApiResponse => {
         }
       },
 
-      // ✅ 3. ข้อมูลสรุป
+      //  3. ข้อมูลสรุป
       budgetTotal: 11750,    // รวม Q2 ทุก category
       minTotal: 8800,        // รวม Q1 ทุก category
       maxTotal: 16000,       // รวม Q3 ทุก category
       filledMembers: 4,      // จำนวนคนที่กรอบ 
       totalMembers: 4,
       actualVote: 4,
-      // ✅ 4. ประวัติการเสนอทั้งหมด (rowlog)
+      //  4. ประวัติการเสนอทั้งหมด (rowlog)
       rowlog: [
         {
           proposed_by: 'user-001',
@@ -747,9 +745,7 @@ export const getMockGetBudgetVoting = (tripCode: string): ApiResponse => {
   };
 };
 
-// ============================================================================
 // EXPORTS
-// ============================================================================
 
 export default {
   // Data

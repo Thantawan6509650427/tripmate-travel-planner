@@ -448,7 +448,7 @@ useEffect(() => {
               <div className="flex justify-between text-sm font-medium text-gray-700 mb-1.5">
                 <span>{label}</span>
                 <span className={`font-bold ${count >= memberCount ? 'text-green-600' : 'text-blue-600'}`}>
-                  {count}/{memberCount} คน {count >= memberCount ? '✅' : ''}
+                  {count}/{memberCount} คน {count >= memberCount ? '' : ''}
                 </span>
               </div>
               <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
@@ -504,7 +504,7 @@ useEffect(() => {
                   ? 'bg-gray-100 text-gray-600'
                   : 'bg-yellow-100 text-yellow-700'
               }`}>
-                {['completed','archived','confirmed'].includes(trip.status) ? '✅ เสร็จสิ้น' : '🗳️ กำลังโหวต'}
+                {['completed','archived','confirmed'].includes(trip.status) ? ' เสร็จสิ้น' : '🗳️ กำลังโหวต'}
               </span>
             </div>
           </div>
@@ -913,7 +913,7 @@ useEffect(() => {
 
       {isOwner && canViewSummary && (
         <div className="w-full py-4 bg-green-50 border border-green-200 rounded-xl text-center text-green-700 font-semibold">
-          ✅ การโหวตปิดแล้ว
+           การโหวตปิดแล้ว
         </div>
       )}
 

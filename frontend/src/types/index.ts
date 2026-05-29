@@ -1,11 +1,7 @@
-// ============================================================================
 // frontend/src/types/index.ts
-// ✅ Types ที่ตรงกับ Backend APIs เท่านั้น
-// ============================================================================
+//  Types ที่ตรงกับ Backend APIs เท่านั้น
 
-// ============================================================================
 // API RESPONSE TYPES
-// ============================================================================
 
 export interface ApiResponse<T = any> {
   success: boolean;
@@ -21,9 +17,7 @@ export interface ApiError {
   detail?: string | object;
 }
 
-// ============================================================================
 // USER & AUTH TYPES
-// ============================================================================
 /*
 export interface User {
   user_id: string;
@@ -53,9 +47,7 @@ export interface AuthResponse {
   };
 }
 
-// ============================================================================
 // TRIP TYPES (ตรงกับ Backend Model)
-// ============================================================================
 
 export interface Trip {
   membercount: number;
@@ -67,7 +59,7 @@ export interface Trip {
   invite_code: string;
   invite_link: string;
   status: 'planning' | 'voting' | 'confirmed' | 'completed' | 'archived';
-  created_at: string;           // ✅ Backend ส่งมาเป็น ISO string
+  created_at: string;           //  Backend ส่งมาเป็น ISO string
   updated_at?: string;
   confirmed_at?: string | null;
   is_active?: boolean;
@@ -159,9 +151,7 @@ export interface MemberAvailability {
   availableDates: string[]; // ["2025-12-25", "2025-12-26"]
 }
 
-// ============================================================================
 // TRIP SUMMARY (สำหรับ SummaryPage)
-// ============================================================================
 
 export interface TripSummaryMember {
   user_id: string;
@@ -284,9 +274,7 @@ export interface TripRecommendationResult {
   };
 }
 
-// ============================================================================
 // CREATE/UPDATE TRIP
-// ============================================================================
 
 export interface CreateTripPayload {
   trip_name: string;
@@ -316,9 +304,7 @@ export interface JoinTripResponse {
   rejoined: boolean;
 }
 
-// ============================================================================
 // VOTE TYPES
-// ============================================================================
 
 export interface DateRange {
   start_date: string;
@@ -341,9 +327,7 @@ export interface StartVotingResponse {
   message: string;
 }
 
-// ============================================================================
 // BUDGET TYPES
-// ============================================================================
 
 export type BudgetCategory = 'accommodation' | 'transport' | 'food' | 'other';
 
@@ -402,9 +386,7 @@ export interface UpdateBudgetResponse {
   new_amount: number;
 }
 
-// ============================================================================
 // LOCATION VOTING TYPES
-// ============================================================================
 
 export interface LocationVote {
   place: string;
@@ -509,9 +491,7 @@ export interface DateMatchingResponse {
   }>;
 }
 
-// ============================================================================
 // FRONTEND UI TYPES
-// ============================================================================
 
 export interface TripCard {
   id: string;
@@ -533,17 +513,13 @@ export interface ErrorState {
   code?: string;
 }
 
-// ============================================================================
 // UTILITY TYPES
-// ============================================================================
 
 export type ValueOf<T> = T[keyof T];
 export type Nullable<T> = T | null;
 export type Optional<T> = T | undefined;
 
-// ============================================================================
 // TYPE GUARDS
-// ============================================================================
 
 export const isTripCompleted = (status: Trip['status']): boolean => {
   return status === 'completed' || status === 'archived';
@@ -557,9 +533,7 @@ export const canEditTrip = (status: Trip['status']): boolean => {
   return status === 'planning' || status === 'voting';
 };
 
-// ============================================================================
 // HELPER FUNCTIONS
-// ============================================================================
 
 export const formatTripStatus = (status: Trip['status']): string => {
   const statusMap: Record<Trip['status'], string> = {
@@ -583,9 +557,7 @@ export const getTripStatusColor = (status: Trip['status']): string => {
   return colorMap[status] || 'bg-gray-100 text-gray-700';
 };
 
-// ============================================================================
 // TYPE CONVERSIONS
-// ============================================================================
 
 export const tripSummaryToCard = (trip: TripSummary): TripCard => {
   const isCompleted = trip.status === 'completed' || trip.status === 'archived';
@@ -603,9 +575,7 @@ export const tripSummaryToCard = (trip: TripSummary): TripCard => {
 };
 
 
-// ============================================================================
 // Date Matching Result Types
-// ============================================================================
 // วันที่ที่มีคนว่างตรงกันทั้งหมด
 // export interface DateIntersectionResult {
 //   rows: boolean;
@@ -616,7 +586,6 @@ export const tripSummaryToCard = (trip: TripSummary): TripCard => {
 //   intersection: string[];
 //   weighted: WeightedDateResult[];
 //   totalMembers: number;
-// }
 
 // คะแนนความนิยมของแต่ละวัน
 export interface WeightedDateResult {

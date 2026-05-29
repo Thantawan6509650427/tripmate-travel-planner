@@ -95,4 +95,4 @@ ${rootPkg.author || "My TripMate Team"}
 `;
 
 fs.writeFileSync("README.md", readme.trim());
-console.log("✅ README.md generated successfully");
+console.log(" README.md generated successfully");
