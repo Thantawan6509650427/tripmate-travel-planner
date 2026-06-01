@@ -69,7 +69,8 @@ export const markNotificationAsReadController = async (req: Request,res: Respons
     }
 
     const result = await notiservice.markNotificationAsRead(
-      notificationId
+      notificationId,
+      user_id
     );
 
     if (!result.success) {

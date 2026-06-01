@@ -483,21 +483,12 @@ const Header: React.FC<HeaderProps> = ({ onLogout }) => {
               className="flex items-center gap-3 hover:bg-gray-100 rounded-full p-1 pr-3 transition-all duration-200"
               aria-label="เมนูโปรไฟล์"
             >
-              {/* Avatar with initial */}
+              {/* Avatar */}
               <div className="relative">
                 <AvatarDisplay size="md" />
-                {/* <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full" /> */}
               </div>
 
-              {/* User Info */}
-              {/* <div className="text-left">
-                <p className="font-medium text-sm text-gray-900 leading-tight max-w-[150px] truncate">
-                  {user?.name}
-                </p>
-                <p className="text-xs text-gray-500 max-w-[150px] truncate">
-                  {user?.email}
-                </p>
-              </div> */}
+              {/* User info (name/email) intentionally omitted here for compact header */}
 
               {/* Chevron */}
               <ChevronDown className={`w-4 h-4 text-gray-600 transition-transform ${profileMenuOpen ? 'rotate-180' : ''}`} />

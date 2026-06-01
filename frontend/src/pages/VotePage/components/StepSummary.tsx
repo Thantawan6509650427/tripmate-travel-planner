@@ -426,12 +426,7 @@ useEffect(() => {
   return (
     <div className="space-y-6">
 
-      {/* ── Header ── */}
-      {/* <div className="bg-blue-400 p-6 rounded-xl text-center text-white">
-        <div className="text-5xl mb-2">✈️</div>
-        <h2 className="text-2xl font-bold mb-1">{trip.tripname}</h2>
-        <p className="text-blue-100 text-sm">สรุปผลการโหวตของทุกคน</p>
-      </div> */}
+      {/* ── Header ── (compact header rendered in page layout) */}
 
       {/* ── Progress ── */}
       <div className="bg-blue-100 rounded-xl shadow-xl p-6">

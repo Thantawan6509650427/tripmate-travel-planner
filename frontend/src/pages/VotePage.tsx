@@ -712,10 +712,7 @@ const reloadTripData = async (tripId?: string) => {
             <p className="text-sm text-gray-400 mt-1">
               {trip.description || 'ไม่มีคำอธิบายเพิ่มเติม'}
             </p>
-            {/* <p className="text-sm text-gray-400 mt-1">
-              สร้างโดย {(trip.members?.find(m => m.user_id === trip.ownerid) as any)?.name || 'ไม่ระบุชื่อ'}
-              {trip.createdat && ` · ${new Date(trip.createdat).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })}`}
-            </p> */}
+            {/* Creator and created date omitted for brevity */}
 
             {/*  Closed trip banner */}
             {isClosed && (

@@ -229,9 +229,9 @@ export const getUserNotifications = async (user_id: string) => {
     }
 };
 
-export const markNotificationAsRead = async (notification_id: string) => {
+export const markNotificationAsRead = async (notification_id: string, user_id?: string) => {
     try {
-        const result = await notiModel.markNotificationAsRead(notification_id);
+        const result = await notiModel.markNotificationAsRead(notification_id, user_id);
         if (result.success) {
             return {
                 success: true

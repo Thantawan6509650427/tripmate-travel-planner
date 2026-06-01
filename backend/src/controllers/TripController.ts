@@ -989,24 +989,52 @@ export const addLinkController = async (req: Request, res: Response) => {
 export const generateAIPlan = async (req: Request, res: Response) => {
   try {
     const { tripId } = req.params;
+    const user_id = req.user?.user_id;
     const { tripData, config } = req.body;
+
+    if (!user_id) {
+      return res.status(401).json({
+        success: false,
+        code: "AUTH_UNAUTHORIZED",
+        message: "Unauthorized"
+      });
+    }
+
+    if (!tripId) {
+      return res.status(400).json({
+        success: false,
+        code: "MISSING_FIELD",
+        message: "tripId is required",
+        error: { field: "tripId" }
+      });
+    }
+
+    if (!tripData) {
+      return res.status(400).json({
+        success: false,
+        code: "MISSING_FIELD",
+        message: "tripData is required",
+        error: { field: "tripData" }
+      });
+    }
+
     console.log("tripData:", tripData);
     console.log("config:", config);
-    if (!tripData) {
-      return res.status(400).json({ error: "tripData is required" });
-    }
 
     // เรียก promptService ที่เราแก้ไป
     await PromptService.streamAIPlan(tripData, config || {}, res);
-
   } catch (err: any) {
     console.error("generateAIPlan error:", err);
-    // ถ้า headers ยังไม่ถูกส่ง ค่อย return error
     if (!res.headersSent) {
-      res.status(500).json({ error: "AI generation failed" });
+      return res.status(500).json({
+        success: false,
+        code: "AI_GENERATION_FAILED",
+        message: "AI generation failed",
+        error: { detail: err?.message || "Unknown error" }
+      });
     }
   }
 };
 
-export default {addTripController, deleteTripController, getMyTripsController, requestJoinTripController, removeMemberController, getTripDetailController,getTripSummaryController, manualCloseController,getMemberController, editController,addLinkController, approveMemberController, rejectMemberController, generateAIPlan};
+export default {addTripController, deleteTripController, getMyTripsController, getPendingRequestsController, requestJoinTripController, removeMemberController, getTripDetailController, getTripSummaryController, manualCloseController, getMemberController, editController, addLinkController, approveMemberController, rejectMemberController, generateAIPlan};
 //deleteMemberController

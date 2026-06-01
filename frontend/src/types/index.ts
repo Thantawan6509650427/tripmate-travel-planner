@@ -1,6 +1,3 @@
-// frontend/src/types/index.ts
-//  Types ที่ตรงกับ Backend APIs เท่านั้น
-
 // API RESPONSE TYPES
 
 export interface ApiResponse<T = any> {

@@ -62,20 +62,50 @@ export const googleLogin = async (req: Request, res: Response) => {
 };
 
 export const logout = (req: Request, res: Response) => {
-  res.clearCookie("accessToken", cookieOptions);
-  res.clearCookie("refreshToken", cookieOptions);
-  res.status(200).json({
-    success: true,
-    code: "AUTH_LOGOUT_SUCCESS",
-    message: "Logout successful"
-  });
+  try {
+    res.clearCookie("accessToken", cookieOptions);
+    res.clearCookie("refreshToken", cookieOptions);
+    return res.status(200).json({
+      success: true,
+      code: "AUTH_LOGOUT_SUCCESS",
+      message: "Logout successful"
+    });
+  } catch (err: any) {
+    console.error("logout error:", err);
+    return res.status(500).json({
+      success: false,
+      code: "AUTH_LOGOUT_FAILED",
+      message: "Logout failed",
+      error: { detail: err?.message || "Unknown error" }
+    });
+  }
 };
 
 export const getMe = async (req: AuthRequest, res: Response) => {
-  return res.status(200).json({
-    success: true,
-    data: req.user
-  });
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        code: "AUTH_UNAUTHORIZED",
+        message: "Unauthorized"
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: req.user
+    });
+  } catch (err: any) {
+    console.error("getMe error:", err);
+    return res.status(500).json({
+      success: false,
+      code: "AUTH_GETME_FAILED",
+      message: "Failed to retrieve current user",
+      error: {
+        detail: err?.message || "Unknown error"
+      }
+    });
+  }
 };
 
 export const refreshToken = (req: Request, res: Response) => {

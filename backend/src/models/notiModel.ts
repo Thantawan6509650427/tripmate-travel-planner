@@ -76,13 +76,26 @@ export const getNotificationsByUserId = async (user_id: string) => {
 };
 
 
-export const markNotificationAsRead = async (notification_id: string) => {
+export const markNotificationAsRead = async (notification_id: string, user_id?: string) => {
     const connection = await pool.getConnection();
     try {
-    
-        await connection.query(`
-            UPDATE notifications SET is_read = 1, read_at = CURRENT_TIMESTAMP WHERE notification_id = ?
-        `, [notification_id]);
+        const query = user_id
+            ? `UPDATE notifications SET is_read = 1, read_at = CURRENT_TIMESTAMP WHERE notification_id = ? AND user_id = ?`
+            : `UPDATE notifications SET is_read = 1, read_at = CURRENT_TIMESTAMP WHERE notification_id = ?`;
+        const params = user_id ? [notification_id, user_id] : [notification_id];
+
+        const [result] = await connection.query(query, params);
+        const affectedRows = Array.isArray(result) ? (result[0] as any).affectedRows ?? 0 : (result as any).affectedRows ?? 0;
+
+        if (affectedRows === 0) {
+            return {
+                success: false,
+                message: user_id
+                    ? "Notification not found or not owned by user"
+                    : "Notification not found"
+            };
+        }
+
         return {
             success: true,
             message: "Notification marked as read"

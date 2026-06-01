@@ -250,14 +250,6 @@ export const StepPlace: React.FC<StepPlaceProps> = ({
             </div>
             
             {/* Action Buttons */}
-            {/* <div className="flex gap-2">
-              {votingResults.length > 0 && (
-                <>
-                  <button
-                    onClick={() => setShowAnalysisModal(true)}
-                    className="px-3 sm:px-4 py-2 bg-purple-100 text-purple-700 rounded-lg text-sm font-semibold hover:bg-purple-200 transition flex items-center gap-2 min-w-[44px] justify-center"
-                    title="ดูผลการโหวต"
-                  >
                     <span>📊</span>
                     <span className="hidden sm:inline">ดูผลโหวต</span>
                   </button>
