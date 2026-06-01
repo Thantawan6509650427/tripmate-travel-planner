@@ -248,14 +248,6 @@ export const StepPlace: React.FC<StepPlaceProps> = ({
               </h2>
               <p className="text-gray-600">เรียงลำดับตามความชอบ 3 อันดับ</p>
             </div>
-            
-            {/* Action Buttons */}
-                    <span>📊</span>
-                    <span className="hidden sm:inline">ดูผลโหวต</span>
-                  </button>
-                </>
-              )}
-            </div> */}
           </div>
 
           {/* Vote Selectors */}

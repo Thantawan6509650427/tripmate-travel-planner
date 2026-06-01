@@ -28,6 +28,18 @@ interface SummaryData {
   progress: { dates: number; budget: number; location: number };
 }
 
+interface MemberVoteStatus {
+  user_id: string;
+  name: string;
+  role: string;
+  hasDates: boolean;
+  hasDateList: string[];
+  hasBudget: boolean;
+  budgetData?: Record<string, number>;
+  hasLocation: boolean;
+  locations?: Array<{ place: string; score: number; rank: number }>;
+}
+
 // ── Local Utilities ──
 const formatCurrency = (n: number) => n.toLocaleString('th-TH');
 
@@ -79,6 +91,101 @@ const MODEL_ICON_MAP: Record<AIModel, string> = {
   'gemini-pro': '💎',
 };
 
+// ── Parse member vote statuses from raw vote data ──
+const parseMemberVoteStatuses = (
+  trip: TripDetail,
+  dateData: any,
+  budgetData: any,
+  locData: any
+): MemberVoteStatus[] => {
+  const memberMap = new Map((trip.members || []).map(m => [m.user_id, m]));
+  const memberStatuses = new Map<string, MemberVoteStatus>();
+
+  // Initialize from trip members
+  memberMap.forEach((member, userId) => {
+    memberStatuses.set(userId, {
+      user_id: userId,
+      name: member.full_name || member.name || 'Unknown',
+      role: member.role || 'member',
+      hasDates: false,
+      hasDateList: [],
+      hasBudget: false,
+      budgetData: {},
+      hasLocation: false,
+      locations: [],
+    });
+  });
+
+  // Process date votes
+  if (dateData?.rows && Array.isArray(dateData.rows)) {
+    dateData.rows.forEach((row: any) => {
+      if (row.user_id) {
+        const status = memberStatuses.get(row.user_id);
+        if (status) {
+          status.hasDates = true;
+          if (row.available_date && !status.hasDateList.includes(row.available_date)) {
+            status.hasDateList.push(row.available_date);
+          }
+        }
+      }
+    });
+  }
+
+  // Process budget votes
+  if (budgetData?.rows && Array.isArray(budgetData.rows)) {
+    const budgetByUser = new Map<string, Record<string, number>>();
+    budgetData.rows.forEach((row: any) => {
+      if (row.user_id) {
+        if (!budgetByUser.has(row.user_id)) {
+          budgetByUser.set(row.user_id, {});
+        }
+        const userBudget = budgetByUser.get(row.user_id)!;
+        const key = row.category_name || 'other';
+        userBudget[key] = Number(row.estimated_amount) || 0;
+      }
+    });
+
+    budgetByUser.forEach((budget, userId) => {
+      const status = memberStatuses.get(userId);
+      if (status) {
+        status.hasBudget = Object.keys(budget).length > 0;
+        status.budgetData = budget;
+      }
+    });
+  }
+
+  // Process location votes
+  if (locData?.rows && Array.isArray(locData.rows)) {
+    const locByUser = new Map<string, Array<{ place: string; score: number }>>();
+    locData.rows.forEach((row: any) => {
+      if (row.user_id) {
+        if (!locByUser.has(row.user_id)) {
+          locByUser.set(row.user_id, []);
+        }
+        locByUser.get(row.user_id)!.push({
+          place: row.province_name || row.place || 'Unknown',
+          score: row.score || 0,
+        });
+      }
+    });
+
+    locByUser.forEach((locations, userId) => {
+      const status = memberStatuses.get(userId);
+      if (status) {
+        status.hasLocation = locations.length > 0;
+        status.locations = locations
+          .sort((a, b) => b.score - a.score)
+          .map((loc, idx) => ({
+            ...loc,
+            rank: idx + 1,
+          }));
+      }
+    });
+  }
+
+  return Array.from(memberStatuses.values());
+};
+
 // ============== COMPONENT ==============
 
 export const StepSummary: React.FC<StepSummaryProps> = ({
@@ -93,6 +200,8 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
   // ── Summary data ──
   const [summaryData, setSummaryData] = useState<SummaryData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [memberVoteStatuses, setMemberVoteStatuses] = useState<MemberVoteStatus[]>([]);
+  const [expandedMembers, setExpandedMembers] = useState<Set<string>>(new Set());
 
   // ── AI config ──
   const [selectedModel, setSelectedModel] = useState<AIModel>('claude-3-sonnet');
@@ -174,6 +283,10 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
           location: locData?.actualVote || 0
         }
       });
+
+      // Parse member vote statuses
+      const statuses = parseMemberVoteStatuses(trip, dateData, budgetData, locData);
+      setMemberVoteStatuses(statuses);
 
     } catch (err) {
       console.error("load vote data error", err);
@@ -726,6 +839,152 @@ useEffect(() => {
             </div>
           </details>
 
+        </div>
+      </div>
+
+      {/* ── Member Submissions Review (Feature #3) ── */}
+      <div className="space-y-4">
+        <h3 className="font-bold text-lg text-gray-800 flex items-center gap-2 px-2">
+          📋 สรุปข้อมูลที่สมาชิกกรอกก่อนประมวลผล
+        </h3>
+
+        {/* Vote Completion Summary Card */}
+        <div className="bg-gradient-to-r from-cyan-50 to-blue-50 rounded-xl shadow border border-cyan-200 p-5">
+          <p className="text-sm font-bold text-cyan-700 mb-4 flex items-center gap-2">
+            📊 สถานะการโหวต
+          </p>
+          <div className="grid grid-cols-4 gap-3">
+            <div className="bg-white rounded-lg p-3 text-center border border-cyan-100">
+              <p className="text-2xl font-bold text-gray-800">{memberCount}</p>
+              <p className="text-xs text-gray-500 mt-1">สมาชิกทั้งหมด</p>
+            </div>
+            <div className="bg-white rounded-lg p-3 text-center border border-cyan-100">
+              <p className="text-2xl font-bold text-blue-600">{summaryData?.progress.dates || 0}</p>
+              <p className="text-xs text-gray-500 mt-1">กรอกวันที่</p>
+            </div>
+            <div className="bg-white rounded-lg p-3 text-center border border-cyan-100">
+              <p className="text-2xl font-bold text-green-600">{summaryData?.progress.budget || 0}</p>
+              <p className="text-xs text-gray-500 mt-1">กรอกงบ</p>
+            </div>
+            <div className="bg-white rounded-lg p-3 text-center border border-cyan-100">
+              <p className="text-2xl font-bold text-purple-600">{summaryData?.progress.location || 0}</p>
+              <p className="text-xs text-gray-500 mt-1">โหวตจังหวัด</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Member Review Cards */}
+        <div className="space-y-2">
+          {memberVoteStatuses.map(member => {
+            const isExpanded = expandedMembers.has(member.user_id);
+            const hasAllVotes = member.hasDates && member.hasBudget && member.hasLocation;
+            const hasMissingVotes = !hasAllVotes;
+
+            return (
+              <div key={member.user_id} className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+                {/* Header - Click to expand */}
+                <button
+                  onClick={() => {
+                    const newExpanded = new Set(expandedMembers);
+                    if (newExpanded.has(member.user_id)) {
+                      newExpanded.delete(member.user_id);
+                    } else {
+                      newExpanded.add(member.user_id);
+                    }
+                    setExpandedMembers(newExpanded);
+                  }}
+                  className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition"
+                >
+                  <div className="flex items-center gap-3 flex-1">
+                    <div className="flex-1">
+                      <p className="font-semibold text-gray-800 text-left">
+                        👤 {member.name}
+                        {member.role === 'owner' && <span className="ml-2 text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded">Owner</span>}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className={`text-lg ${member.hasDates ? '✅' : '❌'}`}></span>
+                      <span className={`text-lg ${member.hasBudget ? '✅' : '❌'}`}></span>
+                      <span className={`text-lg ${member.hasLocation ? '✅' : '❌'}`}></span>
+                    </div>
+                  </div>
+                  {hasMissingVotes && (
+                    <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded mr-2 font-medium">
+                      ⚠️ ยังไม่ครบ
+                    </span>
+                  )}
+                  <span className="text-gray-400 text-lg">
+                    {isExpanded ? '▲' : '▼'}
+                  </span>
+                </button>
+
+                {/* Expandable Details */}
+                {isExpanded && (
+                  <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 space-y-3">
+                    {/* Dates */}
+                    <div>
+                      <p className="text-xs font-semibold text-blue-700 mb-2 flex items-center gap-1">
+                        {member.hasDates ? '✅' : '❌'} 📅 วันที่
+                      </p>
+                      {member.hasDates && member.hasDateList.length > 0 ? (
+                        <div className="text-xs space-y-1">
+                          {member.hasDateList
+                            .sort()
+                            .map(date => (
+                              <div key={date} className="bg-blue-100 text-blue-800 px-2 py-1 rounded w-fit">
+                                {new Date(date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })}
+                              </div>
+                            ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-gray-500 italic">ยังไม่กรอก</p>
+                      )}
+                    </div>
+
+                    {/* Budget */}
+                    <div>
+                      <p className="text-xs font-semibold text-green-700 mb-2 flex items-center gap-1">
+                        {member.hasBudget ? '✅' : '❌'} 💰 งบประมาณ
+                      </p>
+                      {member.hasBudget && member.budgetData && Object.keys(member.budgetData).length > 0 ? (
+                        <div className="text-xs space-y-1">
+                          {Object.entries(member.budgetData).map(([category, amount]) => (
+                            <div key={category} className="flex justify-between bg-green-100 text-green-800 px-2 py-1 rounded">
+                              <span>{category}</span>
+                              <span className="font-semibold">฿{formatCurrency(Number(amount))}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-gray-500 italic">ยังไม่กรอก</p>
+                      )}
+                    </div>
+
+                    {/* Location */}
+                    <div>
+                      <p className="text-xs font-semibold text-purple-700 mb-2 flex items-center gap-1">
+                        {member.hasLocation ? '✅' : '❌'} 📍 จังหวัด
+                      </p>
+                      {member.hasLocation && member.locations && member.locations.length > 0 ? (
+                        <div className="text-xs space-y-1">
+                          {member.locations.map(loc => (
+                            <div key={`${loc.place}-${loc.rank}`} className="flex items-center justify-between bg-purple-100 text-purple-800 px-2 py-1 rounded">
+                              <span>
+                                {loc.rank === 1 ? '🥇' : loc.rank === 2 ? '🥈' : '🥉'} {loc.place}
+                              </span>
+                              <span className="text-xs font-semibold">{loc.score} คะแนน</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-gray-500 italic">ยังไม่โหวต</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 

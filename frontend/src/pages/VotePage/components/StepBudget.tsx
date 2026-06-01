@@ -81,7 +81,7 @@ export const StepBudget: React.FC<StepBudgetProps> = ({ trip, budgetInfo, onSave
   useEffect(() => { budgetRef.current = budget; }, [budget]);
 
   //  useRef สำหรับจัดการ timeout
-  const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   //  Cleanup timeout เมื่อ unmount
   useEffect(() => {
